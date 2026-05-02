@@ -3,7 +3,7 @@
 **Feature Branch**: `003-resume-tailoring`  
 **Created**: 2026-05-02  
 **Status**: Draft  
-**Input**: User description: "create a new spec for `resume tailoring editor`. This page allows users to generate and customize resume variations from their master CV. Each tailored resume is a derived version of the master CV optimized for a specific job or purpose. Features: - Selectively include or exclude experiences, skills, and projects from the master CV - Rearrange sections for emphasis - Light inline editing that does not modify the master CV - Ability to create multiple tailored versions of the same master resume - Versioning of tailored resumes - Optional naming per tailored resume (e.g. "Frontend Engineer Application") This editor should clearly distinguish between: - Master CV data (read-only source) - Tailored resume modifications (local to this version only)"
+**Input**: User description: "create a new spec for `resume tailoring editor`. This page allows users to generate and customize resume variations from their master CV. Each tailored resume is a derived version of the master CV optimized for a specific job or purpose. Features: - Selectively include or exclude experiences, skills, and projects from the master CV - Rearrange sections for emphasis - Light inline editing that does not modify the master CV - Ability to create multiple tailored versions of the same master resume - Versioning of tailored resumes - Optional naming per tailored resume (e.g. "Frontend Engineer Application") This editor should clearly distinguish between: - Master CV data (read-only source) - Tailored resume modifications (local to this version only) **Update**: include visual indicator of page fit (e.g. whether content exceeds one page, two pages, etc.)"
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -67,11 +67,27 @@ As a user, I want to make minor tweaks to bullet points or descriptions in a tai
 
 ---
 
+### User Story 5 - Monitor Page Fit (Priority: P2)
+
+As a user, I want to see a visual indicator of how much space my resume content takes up so that I can ensure it fits within a desired number of pages (e.g., one or two pages).
+
+**Why this priority**: Resume length is a critical factor in job applications; users need real-time feedback to decide what to include or exclude to hit a specific page count.
+
+**Independent Test**: User adds or removes content and observes the page fit indicator updating to reflect the current page count.
+
+**Acceptance Scenarios**:
+
+1. **Given** the tailoring editor, **When** I add enough content to exceed one page, **Then** a visual indicator clearly shows that the content has moved onto a second page.
+2. **Given** content that is slightly over one page, **When** I exclude an entry, **Then** the indicator updates to show that the content now fits within one page.
+
+---
+
 ### Edge Cases
 
 - **Master CV Updates**: What happens to a tailored resume when the Master CV is updated? (Expected: Tailored version retains its overrides but prompts the user if they want to sync new master entries).
 - **Deletion of Master Entry**: How does the system handle a tailored resume that references a master entry that has been deleted? (Expected: The entry is removed from the tailored version or marked as "orphaned").
 - **Multiple Versions of Same Name**: How does the system handle naming conflicts? (Expected: Append a number or timestamp to ensure uniqueness).
+- **Font/Spacing impact on Page Fit**: How does the system handle page fit if the user changes layout settings in the Master CV? (Expected: The indicator in the tailoring editor should reflect the latest layout settings applied to the tailored version).
 
 ## Requirements *(mandatory)*
 
@@ -85,6 +101,7 @@ As a user, I want to make minor tweaks to bullet points or descriptions in a tai
 - **FR-006**: System MUST support naming each tailored resume.
 - **FR-007**: System MUST maintain a version history (or simple "Save as new version" capability) for tailored resumes.
 - **FR-008**: System MUST allow users to "Reset to Master" for any specific entry or the entire tailored resume.
+- **FR-009**: System MUST provide a real-time visual indicator showing the current page count and "page fit" of the tailored resume content.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -99,6 +116,7 @@ As a user, I want to make minor tweaks to bullet points or descriptions in a tai
 - **SC-002**: Zero modifications to the Master CV occur when editing a tailored resume.
 - **SC-003**: Tailored resumes load within 500ms, including the resolution of master data and local overrides.
 - **SC-004**: Users can successfully "Reset" an overridden field to its master value with a single click.
+- **SC-005**: The page fit indicator updates within 200ms of any content visibility or override change.
 
 ## Assumptions
 
@@ -106,3 +124,4 @@ As a user, I want to make minor tweaks to bullet points or descriptions in a tai
 - **Read-Only Master**: The tailoring editor interface will explicitly treat Master CV data as read-only, only allowing "overrides" to be saved.
 - **Simple Versioning**: Versioning initially refers to saved snapshots or duplicates, not a full git-like diff system.
 - **No Global Sync**: Changes made in a tailored resume never propagate back to the Master CV.
+- **Page Calculation**: The system assumes a standard A4 or Letter page size for the fit indicator calculation.

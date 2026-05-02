@@ -31,6 +31,7 @@
 
 ## Notes
 
+- **Update 1 (2026-05-02)**: Added "Visual indicator of page fit" requirement (FR-009), user story (User Story 5), and success criterion (SC-005).
 - The specification successfully defines the complex relationship between Master CV data and tailored overrides without resorting to technical implementation details like database schemas or specific state management patterns.
 - Success criteria focus on user performance and data integrity (preventing Master CV corruption).
 - No clarifications were necessary.
