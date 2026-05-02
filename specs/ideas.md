@@ -1,9 +1,5 @@
 ## Career Data Layer (Most Important)
 
-This is your real moat.
-
-Instead of “documents”, store reusable career data.
-
 **User Profile**
 
 - Name
