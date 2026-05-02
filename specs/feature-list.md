@@ -2,7 +2,7 @@
 
 Resume Builder Website: CV -> Resume
 
-_"Build once, tailor forever."_
+> "Build once, tailor forever."
 
 **Required**
 

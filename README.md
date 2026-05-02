@@ -2,6 +2,8 @@
 
 This is a resume editor and tailoring tool that can transform a CV into several tailored resumes.
 
+> "Build once, tailor forever."
+
 ## Setup and Installation
 
 run `npm install` to download all packages necessary for each prototype.
