@@ -1,0 +1,12 @@
+{
+  "name": "resume-project",
+  "version": "0.0.0",
+  "description": "This is a resume editor and tailoring tool that can transform a CV into several tailored resumes.",
+  "license": "ISC",
+  "author": "Alex Dombroski",
+  "type": "module",
+  "workspaces": ["packages/**"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
