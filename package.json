@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "prepare": "husky"
+    "prepare": "node .husky/prepare.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",

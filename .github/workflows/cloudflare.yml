@@ -10,6 +10,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  PACKAGE_PATH: packages/bakeoff1
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,13 +24,14 @@ jobs:
         with:
           node-version: 24
       - name: Install
-        run: npm ci --workspace=packages/bakeoff1
+        run: npm ci --workspace=${{ env.PACKAGE_PATH }}
       - name: Build
         run: |
-          npm ren gen
-          npm run build
+          npm run gen --workspace=${{ env.PACKAGE_PATH }}
+          npm run build --workspace=${{ env.PACKAGE_PATH }}
       - name: Deploy
         run: npx wrangler deploy
+        working-directory: ${{ env.PACKAGE_PATH }}
         env:
           # Wrangler looks for these exact names by default
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}

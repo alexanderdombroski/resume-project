@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "types": ["node"],
+        "skipLibCheck": true
+    },
+    "include": ["./.husky/prepare.ts"]
+}
