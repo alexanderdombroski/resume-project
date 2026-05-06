@@ -1,2 +1,6 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+  import { resolve } from '$app/paths';
+</script>
+
+<h1>Welcome to the Resume Editor</h1>
+<p>Visit the <a href={resolve('/editor')}>editor</a> to get started</p>

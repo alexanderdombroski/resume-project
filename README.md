@@ -14,9 +14,15 @@ This is a monorepo of several prototypes in different stacks.
 - [Bakeoff 2](packages/bakeoff2) - SSG Client: Vue, Nuxt, Vercel Serverless
 - [Bakeoff 3](packages/bakeoff3) - Dynamic Client: Solid, Static Astro w/ Netlify adapter, Serverless Lambdas, MongoDB, MongoDB Atlas
 
+**Site Links**
+
+1. https://bakeoff1.alexdombroski.workers.dev/
+2. _bakeoff2.com_
+3. _bakeoff3.com_
+
 Read the readme to get started with each
 
-## Other resume editors 
+## Other resume editors
 
 The big selling feature this resume editor will have that other's don't is the ability to tailor many resumes based off a large CV or career database. Flow CV may have this to some extent in their paid version. The other feature I'd like is an indicator to detect if the tailored resume is a fitting one-page size.
 
