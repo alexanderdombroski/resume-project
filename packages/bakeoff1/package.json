@@ -17,7 +17,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/kit": "^2.57.0",
-		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.1",
 		"@types/node": "^24",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.5.1",
