@@ -1,0 +1,67 @@
+erDiagram
+
+    USER {
+        int id
+        string name
+    }
+    ACCOUNT {
+        int id
+        string userId
+    }
+
+    SESSION {
+        int id
+        string userId
+    }
+
+    VERIFICATION {
+        int id
+        string userId
+    }
+
+    RESUME {
+        int id
+        string userId
+        string title
+        string summary
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    SECTION {
+        int id
+        string resumeId
+        string title
+        int order
+        string type
+    }
+
+    BULLET_POINT {
+        int id
+        string sectionId
+        string content
+        int order
+    }
+
+    SECTION_ITEM {
+        int id
+        string sectionId
+        string label
+        string value
+        date startDate
+        date endDate
+        string location
+        string description
+        int order
+    }
+
+    %% Auth relationships
+    USER ||--o{ ACCOUNT : has
+    USER ||--o{ SESSION : has
+    USER ||--o{ VERIFICATION : has
+    USER ||--o{ RESUME : owns
+
+    %% Resume structure
+    RESUME ||--o{ SECTION : contains
+    SECTION ||--o{ BULLET_POINT : has
+    SECTION ||--o{ SECTION_ITEM : has
