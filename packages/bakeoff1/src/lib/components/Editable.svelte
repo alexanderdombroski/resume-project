@@ -1,49 +1,86 @@
 <script lang="ts">
   type Props = {
-    tag?: 'p' | 'span' | 'li';
-    /** Bindable string */
+    ariaLabel?: string;
     value: string;
     placeholder?: string;
+    onsave?: (newValue: string) => void;
   };
 
-  let { tag = 'p', value, placeholder = 'double click to edit' }: Props = $props();
+  let {
+    value = $bindable(''),
+    placeholder = '...',
+    ariaLabel = 'editable text',
+    onsave,
+  }: Props = $props();
 
   let editing = $state(false);
-  let ghostText = $derived(placeholder);
+  let draft = $state(value);
 
-  function initEditing() {
-    ghostText = '';
+  let textareaEl: HTMLTextAreaElement | null = $state(null);
+
+  function startEditing() {
     editing = true;
+    draft = value;
+
+    // wait for DOM update then focus
+    queueMicrotask(() => {
+      textareaEl?.focus();
+      textareaEl?.setSelectionRange(draft.length, draft.length);
+    });
   }
 
-  function save(e: Event) {
-    const target = e.target as HTMLElement;
-    const newValue = target.textContent.trim().replace(/\u200B/g, '');
-    console.log('blur', newValue, !newValue);
+  function save() {
+    const newValue = draft.trim().replace(/\u200B/g, '');
     value = newValue;
-    if (!newValue) {
-      // target.textContent = ""
-      ghostText = placeholder;
-      console.log('inserting', placeholder, !value);
-    }
     editing = false;
+    onsave?.(newValue);
+  }
+
+  function cancel() {
+    draft = value;
+    editing = false;
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancel();
+    }
+
+    // optional UX: Cmd/Ctrl + Enter to save
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      save();
+    }
   }
 </script>
 
-<svelte:element
-  this={tag}
-  contenteditable={editing}
-  ondblclick={initEditing}
-  onblur={save}
-  role="textbox"
-  tabindex="0"
-  class:ghost-text={!value}
->
-  {value || ghostText}
-</svelte:element>
+{#if editing}
+  <textarea
+    bind:this={textareaEl}
+    bind:value={draft}
+    aria-label={ariaLabel}
+    {placeholder}
+    onblur={save}
+    onkeydown={handleKeydown}
+    rows="1"
+  ></textarea>
+{:else}
+  <div
+    class:ghost-text={!value}
+    role="textbox"
+    tabindex="0"
+    aria-label={ariaLabel}
+    aria-readonly="true"
+    ondblclick={startEditing}
+    onkeydown={(e) => e.key === 'Enter' && startEditing()}
+  >
+    {value || placeholder}
+  </div>
+{/if}
 
 <style>
-  .ghost-text[contenteditable='false'] {
+  .ghost-text {
     color: #9ca3af; /* light gray */
     opacity: 1; /* override browser default fading */
     font-style: italic;

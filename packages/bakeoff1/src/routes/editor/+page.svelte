@@ -6,5 +6,5 @@
 </script>
 
 <Topbar />
-<Editable {value} />
+<Editable bind:value />
 <p>editor</p>

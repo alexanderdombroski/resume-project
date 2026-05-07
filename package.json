@@ -9,6 +9,7 @@
     "packages/**"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace packages/bakeoff1",
     "lint": "eslint .",
     "prepare": "node .husky/prepare.ts"
   },
