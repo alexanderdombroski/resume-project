@@ -3,4 +3,6 @@
 </script>
 
 <h1>Welcome to the Resume Editor</h1>
+<blockquote>"Build once, tailor forever."</blockquote>
+
 <p>Visit the <a href={resolve('/editor')}>editor</a> to get started</p>
