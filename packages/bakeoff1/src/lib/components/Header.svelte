@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import AuthMenu from './auth/AuthMenu.svelte';
 </script>
 
 <header>
-  <div role="img">ResumeSwapper</div>
+  <a href={resolve('/')}>
+    <div role="img">ResumeSwapper</div>
+  </a>
   <AuthMenu />
 </header>
