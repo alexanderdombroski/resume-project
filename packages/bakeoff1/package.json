@@ -17,15 +17,15 @@
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/kit": "^2.57.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.1",
-		"@types/node": "^24",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@types/node": "^25.6.2",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.5.1",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
 		"typescript": "^6.0.2",
 		"vite": "^8.0.7",
-		"wrangler": "^4.81.0"
+		"wrangler": "^4.90.0"
 	},
 	"dependencies": {
 		"bits-ui": "^2.18.1"
