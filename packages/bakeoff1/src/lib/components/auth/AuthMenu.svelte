@@ -1,8 +1,9 @@
 <script lang="ts">
   // Replace with your real auth state later
-  let isLoggedIn = true;
+  let isLoggedIn = false;
 
   import { DropdownMenu } from 'bits-ui';
+  import Login from './Login.svelte';
 </script>
 
 <DropdownMenu.Root>
@@ -28,7 +29,7 @@
     {:else}
       <DropdownMenu.Item>Register</DropdownMenu.Item>
 
-      <DropdownMenu.Item>Log in</DropdownMenu.Item>
+      <Login />
     {/if}
   </DropdownMenu.Content>
 </DropdownMenu.Root>
