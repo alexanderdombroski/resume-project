@@ -18,7 +18,19 @@
 </footer>
 
 <style>
-  svg {
-    width: 4rem;
+  footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-evenly;
+    align-content: center;
+    padding: 1rem;
+
+    p {
+      text-align: center;
+      margin-block: auto;
+    }
+    svg {
+      width: 4rem;
+    }
   }
 </style>

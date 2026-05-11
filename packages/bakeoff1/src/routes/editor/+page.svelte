@@ -1,5 +1,4 @@
-<script>
-  // import Editable from '$lib/components/Editable.svelte';
+<script lang="ts">
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Topbar from '$lib/components/Topbar.svelte';
 </script>

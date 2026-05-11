@@ -3,7 +3,7 @@
   let isLoggedIn = false;
 
   import { DropdownMenu } from 'bits-ui';
-  import Login from './Login.svelte';
+  // import Login from './Login.svelte';
 </script>
 
 <DropdownMenu.Root>
@@ -28,8 +28,8 @@
       <DropdownMenu.Item>Log out</DropdownMenu.Item>
     {:else}
       <DropdownMenu.Item>Register</DropdownMenu.Item>
-
-      <Login />
+      <DropdownMenu.Item>Login</DropdownMenu.Item>
+      <!-- <DropdownMenu.Item><Login /></DropdownMenu.Item> -->
     {/if}
   </DropdownMenu.Content>
 </DropdownMenu.Root>
