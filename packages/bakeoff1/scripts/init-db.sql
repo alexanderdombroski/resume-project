@@ -1,3 +1,9 @@
+DROP TABLE IF EXISTS "BULLET_POINT" CASCADE;
+DROP TABLE IF EXISTS "SECTION_ITEM" CASCADE;
+DROP TABLE IF EXISTS "SECTION" CASCADE;
+DROP TABLE IF EXISTS "RESUME" CASCADE;
+DROP TABLE IF EXISTS "USER" CASCADE;
+
 -- =========================
 -- USER
 -- =========================
@@ -74,3 +80,6 @@ CREATE TABLE IF NOT EXISTS "SECTION_ITEM" (
         REFERENCES "SECTION"(id)
         ON DELETE CASCADE
 );
+
+INSERT INTO "USER" (id, email, passwordHash)
+VALUES (0, 'testperson@example.com', 'test_hash');
