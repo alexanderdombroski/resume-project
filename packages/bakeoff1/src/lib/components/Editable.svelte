@@ -72,7 +72,7 @@
     tabindex="0"
     aria-label={ariaLabel}
     aria-readonly="true"
-    ondblclick={startEditing}
+    onclick={startEditing}
     onkeydown={(e) => e.key === 'Enter' && startEditing()}
   >
     {value || placeholder}
