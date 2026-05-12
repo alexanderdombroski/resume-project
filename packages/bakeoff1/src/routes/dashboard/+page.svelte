@@ -1,6 +1,7 @@
 <script lang="ts">
   import { DropdownMenu } from 'bits-ui';
   import Editable from '$lib/components/Editable.svelte';
+  import type { PageData } from './$types';
 
   type Resume = {
     id: string;
@@ -11,40 +12,9 @@
     tags: string[];
   };
 
-  let resumes = $state<Resume[]>([
-    {
-      id: 'rsm-001',
-      title: 'Endless Resume',
-      kind: 'cv',
-      lastUpdated: 'Today, 10:24 AM',
-      createdAt: 'Jan 12, 2026',
-      tags: ['Comprehensive', 'Academic', 'Long-form'],
-    },
-    {
-      id: 'rsm-002',
-      title: 'Product Engineer Resume',
-      kind: 'standard',
-      lastUpdated: 'Yesterday, 4:18 PM',
-      createdAt: 'Feb 18, 2026',
-      tags: ['Tech', '1-page'],
-    },
-    {
-      id: 'rsm-003',
-      title: 'Frontend Specialist Resume',
-      kind: 'standard',
-      lastUpdated: 'May 5, 2026',
-      createdAt: 'Mar 2, 2026',
-      tags: ['UI', 'ATS-friendly'],
-    },
-    {
-      id: 'rsm-004',
-      title: 'Consulting Resume',
-      kind: 'standard',
-      lastUpdated: 'Apr 28, 2026',
-      createdAt: 'Jan 30, 2026',
-      tags: ['Business', 'Client-facing'],
-    },
-  ]);
+  let { data }: { data: PageData } = $props();
+
+  let resumes = $derived<Resume[]>(data.resumes);
 
   const highlightedResume = $derived(resumes.find((resume) => resume.kind === 'cv'));
   const standardResumes = $derived(resumes.filter((resume) => resume.kind !== 'cv'));
