@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { DropdownMenu } from 'bits-ui';
   import Editable from '$lib/components/Editable.svelte';
   import type { PageData } from './$types';
@@ -24,6 +25,12 @@
       resume.id === id ? { ...resume, title: newTitle || resume.title } : resume
     );
   }
+
+  function getEditorUrl(id?: string): string {
+    const basePath = resolve('/editor');
+    if (!id) return basePath;
+    return `${basePath}?${new URLSearchParams({ resumeId: id }).toString()}`;
+  }
 </script>
 
 <section class="dashboard">
@@ -35,7 +42,8 @@
         Manage documents at a high level. Editing happens in the dedicated editor flow.
       </p>
     </div>
-    <button class="btn primary" type="button">Create</button>
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+    <a class="btn primary" href={getEditorUrl()}>Create</a>
   </header>
 
   {#if highlightedResume}
@@ -66,7 +74,8 @@
       </div>
 
       <div class="actions" aria-label="Endless resume operations">
-        <button class="btn" type="button">Edit</button>
+        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+        <a class="btn" href={getEditorUrl(highlightedResume.id)}>Edit</a>
         <button class="btn" type="button">Rename</button>
         <button class="btn danger" type="button">Delete</button>
 
@@ -121,7 +130,8 @@
         </div>
 
         <div class="actions compact" aria-label={`${resume.title} operations`}>
-          <button class="btn" type="button">Edit</button>
+          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+          <a class="btn" href={getEditorUrl(resume.id)}>Edit</a>
           <button class="btn" type="button">Rename</button>
           <button class="btn danger" type="button">Delete</button>
         </div>
@@ -284,6 +294,9 @@
   }
 
   .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid #cfc2af;
     background: #fff;
     color: var(--ink);
@@ -291,7 +304,8 @@
     padding: 0.46rem 0.75rem;
     font-size: 0.9rem;
     font-weight: 600;
-    cursor: default;
+    cursor: pointer;
+    text-decoration: none;
   }
 
   .btn.primary {
