@@ -1,4 +1,5 @@
-import type { PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 
 type DashboardResume = {
@@ -21,26 +22,38 @@ function formatDate(value: string | Date): string {
   return dateFormatter.format(date);
 }
 
+function parseResumeId(raw: string): number | null {
+  const trimmed = raw.trim();
+  const prefixed = /^rsm-(\d+)$/i.exec(trimmed);
+  const numeric = /^\d+$/.test(trimmed);
+  const value = prefixed ? prefixed[1] : numeric ? trimmed : null;
+  if (!value) return null;
+
+  const id = Number(value);
+  if (!Number.isInteger(id) || id < 0) return null;
+  return id;
+}
+
 export const load: PageServerLoad = async () => {
   const result = await db.query<{
     id: number;
     title: string;
-    createdat: string;
-    updatedat: string;
+    created_at: string;
+    updated_at: string;
     section_types: string[] | null;
   }>(
     `
     SELECT
       r.id,
       r.title,
-      r.createdat,
-      r.updatedat,
+      r.created_at,
+      r.updated_at,
       ARRAY_REMOVE(ARRAY_AGG(DISTINCT s.type), NULL) AS section_types
-    FROM "RESUME" r
-    LEFT JOIN "SECTION" s ON s.resumeid = r.id
-    WHERE r.userid = $1
+    FROM resume r
+    LEFT JOIN section s ON s.resume_id = r.id
+    WHERE r.user_id = $1
     GROUP BY r.id
-    ORDER BY r.updatedat DESC
+    ORDER BY r.updated_at DESC
   `,
     [0]
   );
@@ -49,8 +62,8 @@ export const load: PageServerLoad = async () => {
     id: `rsm-${String(row.id).padStart(3, '0')}`,
     title: row.title,
     kind: index === 0 ? 'cv' : 'standard',
-    lastUpdated: formatDate(row.updatedat),
-    createdAt: formatDate(row.createdat),
+    lastUpdated: formatDate(row.updated_at),
+    createdAt: formatDate(row.created_at),
     tags: (row.section_types ?? []).map((type) =>
       type
         .split(/[_\s-]+/)
@@ -60,4 +73,37 @@ export const load: PageServerLoad = async () => {
   }));
 
   return { resumes };
+};
+
+export const actions: Actions = {
+  rename: async ({ request }) => {
+    const formData = await request.formData();
+    const resumeIdRaw = String(formData.get('resumeId') ?? '');
+    const titleRaw = String(formData.get('title') ?? '').trim();
+
+    const resumeId = parseResumeId(resumeIdRaw);
+    if (resumeId === null) {
+      return fail(400, { message: 'Invalid resume id' });
+    }
+
+    if (!titleRaw) {
+      return fail(400, { message: 'Title is required' });
+    }
+
+    const result = await db.query<{ id: number }>(
+      `
+      UPDATE resume
+      SET title = $1, updated_at = NOW()
+      WHERE id = $2 AND user_id = $3
+      RETURNING id
+      `,
+      [titleRaw, resumeId, 0]
+    );
+
+    if (result.rowCount === 0) {
+      return fail(404, { message: 'Resume not found' });
+    }
+
+    return { ok: true };
+  },
 };

@@ -20,10 +20,27 @@
   const highlightedResume = $derived(resumes.find((resume) => resume.kind === 'cv'));
   const standardResumes = $derived(resumes.filter((resume) => resume.kind !== 'cv'));
 
-  function renameResume(id: string, newTitle: string) {
+  async function renameResume(id: string, newTitle: string) {
+    const previous = resumes;
+    const fallbackTitle = previous.find((resume) => resume.id === id)?.title ?? '';
+    const nextTitle = newTitle || fallbackTitle;
+
     resumes = resumes.map((resume) =>
-      resume.id === id ? { ...resume, title: newTitle || resume.title } : resume
+      resume.id === id ? { ...resume, title: nextTitle } : resume
     );
+
+    const formData = new FormData();
+    formData.set('resumeId', id);
+    formData.set('title', nextTitle);
+
+    const response = await fetch('?/rename', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      resumes = previous;
+    }
   }
 
   function getEditorUrl(id?: string): string {
@@ -76,7 +93,6 @@
       <div class="actions" aria-label="Endless resume operations">
         <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
         <a class="btn" href={getEditorUrl(highlightedResume.id)}>Edit</a>
-        <button class="btn" type="button">Rename</button>
         <button class="btn danger" type="button">Delete</button>
 
         <DropdownMenu.Root>
@@ -132,7 +148,6 @@
         <div class="actions compact" aria-label={`${resume.title} operations`}>
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
           <a class="btn" href={getEditorUrl(resume.id)}>Edit</a>
-          <button class="btn" type="button">Rename</button>
           <button class="btn danger" type="button">Delete</button>
         </div>
       </article>
