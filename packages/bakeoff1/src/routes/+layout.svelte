@@ -9,6 +9,11 @@
 
 <svelte:head>
   <link rel="icon" href={favicon} />
+  <title>Endless Resume | Build once, tailor forever.</title>
+  <meta
+    name="description"
+    content="Endless Resume helps you build one complete CV and instantly tailor many targeted resumes, with one-page fit guidance built in."
+  />
 </svelte:head>
 
 <div class="contents">
