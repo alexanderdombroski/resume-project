@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { AlertDialog, DropdownMenu } from 'bits-ui';
   import Editable from '$lib/components/Editable.svelte';
@@ -60,6 +61,20 @@
     }
   }
 
+  async function duplicateResume(id: string) {
+    const formData = new FormData();
+    formData.set('resumeId', id);
+
+    const response = await fetch('?/duplicate', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (response.ok) {
+      await invalidateAll();
+    }
+  }
+
   function getEditorUrl(id?: string): string {
     const basePath = resolve('/editor');
     if (!id) return basePath;
@@ -110,6 +125,9 @@
       <div class="actions" aria-label="Endless resume operations">
         <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
         <a class="btn" href={getEditorUrl(highlightedResume.id)}>Edit</a>
+        <button class="btn" type="button" onclick={() => duplicateResume(highlightedResume.id)}>
+          Duplicate
+        </button>
 
         <DropdownMenu.Root>
           <DropdownMenu.Trigger class="btn menu-trigger">More</DropdownMenu.Trigger>
@@ -162,6 +180,9 @@
         <div class="actions compact" aria-label={`${resume.title} operations`}>
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
           <a class="btn" href={getEditorUrl(resume.id)}>Edit</a>
+          <button class="btn" type="button" onclick={() => duplicateResume(resume.id)}>
+            Duplicate
+          </button>
           <AlertDialog.Root>
             <AlertDialog.Trigger class="btn danger">Delete</AlertDialog.Trigger>
             <AlertDialog.Portal>
