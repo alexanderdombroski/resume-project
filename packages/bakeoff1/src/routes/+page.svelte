@@ -5,4 +5,4 @@
 <h1>Welcome to the Resume Editor</h1>
 <blockquote>"Build once, tailor forever."</blockquote>
 
-<p>Visit the <a href={resolve('/editor')}>editor</a> to get started</p>
+<p>Visit the <a href={resolve('/dashboard')}>dashboard</a> to get started</p>
