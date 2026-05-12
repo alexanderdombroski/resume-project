@@ -73,7 +73,6 @@
         <DropdownMenu.Root>
           <DropdownMenu.Trigger class="btn menu-trigger">More</DropdownMenu.Trigger>
           <DropdownMenu.Content class="menu-content" sideOffset={8}>
-            <DropdownMenu.Item>Create</DropdownMenu.Item>
             <DropdownMenu.Item>Edit</DropdownMenu.Item>
             <DropdownMenu.Separator />
             <DropdownMenu.Item>Delete</DropdownMenu.Item>
@@ -103,7 +102,6 @@
               •••
             </DropdownMenu.Trigger>
             <DropdownMenu.Content class="menu-content" sideOffset={8}>
-              <DropdownMenu.Item>Create</DropdownMenu.Item>
               <DropdownMenu.Item>Edit</DropdownMenu.Item>
               <DropdownMenu.Separator />
               <DropdownMenu.Item>Delete</DropdownMenu.Item>
