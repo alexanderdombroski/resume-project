@@ -169,3 +169,9 @@ VALUES
     -- Resume 3: Projects bullets
     (14, 11, 'Implemented incremental models to shrink daily processing windows by 60 percent.', 1),
     (15, 11, 'Standardized metric definitions used by BI and experimentation pipelines.', 2);
+
+SELECT setval(pg_get_serial_sequence('app_user', 'id'), COALESCE((SELECT MAX(id) FROM app_user), 0), true);
+SELECT setval(pg_get_serial_sequence('resume', 'id'), COALESCE((SELECT MAX(id) FROM resume), 0), true);
+SELECT setval(pg_get_serial_sequence('section', 'id'), COALESCE((SELECT MAX(id) FROM section), 0), true);
+SELECT setval(pg_get_serial_sequence('section_item', 'id'), COALESCE((SELECT MAX(id) FROM section_item), 0), true);
+SELECT setval(pg_get_serial_sequence('bullet_point', 'id'), COALESCE((SELECT MAX(id) FROM bullet_point), 0), true);
