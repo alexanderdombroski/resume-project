@@ -7,14 +7,50 @@
 
   let draftTitle = $state(data.resume?.title ?? 'Untitled Resume');
   let draftSummary = $state(data.resume?.summary ?? '');
+  let sections = $state(
+    (data.resume?.sections ?? []).map((section) => ({
+      ...section,
+      items: [...section.items],
+      bullets: [...section.bullets],
+    }))
+  );
+  let nextTempBulletId = $state(-1);
 
-  const sectionCount = $derived(data.resume?.sections.length ?? 0);
-  const itemCount = $derived(
-    data.resume?.sections.reduce((total, section) => total + section.items.length, 0) ?? 0
-  );
+  const sectionCount = $derived(sections.length);
+  const itemCount = $derived(sections.reduce((total, section) => total + section.items.length, 0));
   const bulletCount = $derived(
-    data.resume?.sections.reduce((total, section) => total + section.bullets.length, 0) ?? 0
+    sections.reduce((total, section) => total + section.bullets.length, 0)
   );
+
+  function addBullet(sectionId: number) {
+    sections = sections.map((section) =>
+      section.id === sectionId
+        ? {
+            ...section,
+            bullets: [
+              ...section.bullets,
+              {
+                id: nextTempBulletId--,
+                section_id: sectionId,
+                content: '',
+                item_order: section.bullets.length,
+              },
+            ],
+          }
+        : section
+    );
+  }
+
+  function removeBullet(sectionId: number, bulletId: number) {
+    sections = sections.map((section) =>
+      section.id === sectionId
+        ? {
+            ...section,
+            bullets: section.bullets.filter((bullet) => bullet.id !== bulletId),
+          }
+        : section
+    );
+  }
 </script>
 
 <main class="editor-shell">
@@ -45,7 +81,7 @@
       </section>
 
       <section class="section-list" aria-label="Resume sections">
-        {#each data.resume.sections as section (section.id)}
+        {#each sections as section (section.id)}
           <article class="section-card">
             <header>
               <div>
@@ -99,11 +135,23 @@
                     <div class="bullet-row">
                       <span class="dot" aria-hidden="true"></span>
                       <input value={bullet.content} aria-label="Bullet point" />
+                      <button
+                        class="icon-btn"
+                        type="button"
+                        aria-label="Remove bullet"
+                        title="Remove bullet"
+                        onclick={() => removeBullet(section.id, bullet.id)}
+                      >
+                        &minus;
+                      </button>
                     </div>
                   {/each}
                 {:else}
                   <p class="empty">No bullet points yet.</p>
                 {/if}
+                <button class="btn add-btn" type="button" onclick={() => addBullet(section.id)}>
+                  Add bullet
+                </button>
               </div>
             </div>
           </article>
@@ -350,9 +398,29 @@
 
   .bullet-row {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  .icon-btn {
+    border: 1px solid #d8cbbb;
+    background: #fff;
+    color: #b42323;
+    border-radius: 8px;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .add-btn {
+    margin-top: 0.55rem;
+    width: 100%;
   }
 
   .dot {
