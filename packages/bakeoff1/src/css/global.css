@@ -1,6 +1,7 @@
 @layer base;
 
 @import 'https://unpkg.com/@csstools/normalize.css' layer(base);
+@import './base/typography.css' layer(base);
 
 :where(a:visited) {
   color: unset;

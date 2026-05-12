@@ -148,7 +148,6 @@
     margin: 2.5rem auto 4rem;
     padding: 0 1.25rem;
     color: var(--ink);
-    font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
   }
 
   .hero {

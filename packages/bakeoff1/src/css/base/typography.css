@@ -1,0 +1,23 @@
+:root {
+  --font-heading:
+    'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Palatino, 'URW Palladio L', serif;
+  --font-body: 'Source Sans 3', 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+}
+
+:where(body) {
+  font-family: var(--font-body);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-heading);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+:where(p, span, li, a, button, input, textarea, label, blockquote, small, strong, em) {
+  font-family: var(--font-body);
+}
