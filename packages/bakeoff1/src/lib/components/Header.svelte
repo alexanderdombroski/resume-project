@@ -5,7 +5,7 @@
 
 <header>
   <a href={resolve('/')} class="logo">
-    <p role="img">ResumeSwapper</p>
+    <p role="img">EndlessResume</p>
   </a>
   <AuthMenu />
 </header>
@@ -17,6 +17,10 @@
     p {
       font-weight: bold;
       align-content: center;
+      font-family: var(--font-logo);
+      letter-spacing: 0.02em;
+      font-size: 1.35rem;
+      margin: 0;
     }
   }
 
