@@ -1,100 +1,100 @@
-DROP TABLE IF EXISTS "BULLET_POINT" CASCADE;
-DROP TABLE IF EXISTS "SECTION_ITEM" CASCADE;
-DROP TABLE IF EXISTS "SECTION" CASCADE;
-DROP TABLE IF EXISTS "RESUME" CASCADE;
-DROP TABLE IF EXISTS "USER" CASCADE;
+DROP TABLE IF EXISTS bullet_point CASCADE;
+DROP TABLE IF EXISTS section_item CASCADE;
+DROP TABLE IF EXISTS section CASCADE;
+DROP TABLE IF EXISTS resume CASCADE;
+DROP TABLE IF EXISTS app_user CASCADE;
 
 -- =========================
--- USER
+-- APP_USER
 -- =========================
-CREATE TABLE IF NOT EXISTS "USER" (
+CREATE TABLE IF NOT EXISTS app_user (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
-    passwordHash TEXT NOT NULL
+    password_hash TEXT NOT NULL
 );
 
 -- =========================
 -- RESUME
 -- =========================
-CREATE TABLE IF NOT EXISTS "RESUME" (
+CREATE TABLE IF NOT EXISTS resume (
     id SERIAL PRIMARY KEY,
-    userId INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     summary TEXT,
-    createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
-    updatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_resume_user
-        FOREIGN KEY (userId)
-        REFERENCES "USER"(id)
+        FOREIGN KEY (user_id)
+        REFERENCES app_user(id)
         ON DELETE CASCADE
 );
 
 -- =========================
 -- SECTION
 -- =========================
-CREATE TABLE IF NOT EXISTS "SECTION" (
+CREATE TABLE IF NOT EXISTS section (
     id SERIAL PRIMARY KEY,
-    resumeId INTEGER NOT NULL,
+    resume_id INTEGER NOT NULL,
     title TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
     type TEXT,
 
     CONSTRAINT fk_section_resume
-        FOREIGN KEY (resumeId)
-        REFERENCES "RESUME"(id)
+        FOREIGN KEY (resume_id)
+        REFERENCES resume(id)
         ON DELETE CASCADE
 );
 
 -- =========================
 -- BULLET_POINT
 -- =========================
-CREATE TABLE IF NOT EXISTS "BULLET_POINT" (
+CREATE TABLE IF NOT EXISTS bullet_point (
     id SERIAL PRIMARY KEY,
-    sectionId INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
     content TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
 
     CONSTRAINT fk_bullet_section
-        FOREIGN KEY (sectionId)
-        REFERENCES "SECTION"(id)
+        FOREIGN KEY (section_id)
+        REFERENCES section(id)
         ON DELETE CASCADE
 );
 
 -- =========================
 -- SECTION_ITEM
 -- =========================
-CREATE TABLE IF NOT EXISTS "SECTION_ITEM" (
+CREATE TABLE IF NOT EXISTS section_item (
     id SERIAL PRIMARY KEY,
-    sectionId INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
     label TEXT,
     value TEXT,
-    startDate DATE,
-    endDate DATE,
+    start_date DATE,
+    end_date DATE,
     location TEXT,
     description TEXT,
-    "order" INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
 
     CONSTRAINT fk_section_item_section
-        FOREIGN KEY (sectionId)
-        REFERENCES "SECTION"(id)
+        FOREIGN KEY (section_id)
+        REFERENCES section(id)
         ON DELETE CASCADE
 );
 
 -- ==================================================
--- MOCK DATA - RESUMES (userId = 0)
+-- MOCK DATA - RESUMES (user_id = 0)
 -- ==================================================
 
-INSERT INTO "USER" (id, email, passwordHash)
+INSERT INTO app_user (id, email, password_hash)
 VALUES (0, 'testperson@example.com', 'test_hash');
 
-INSERT INTO "RESUME" (id, userId, title, summary)
+INSERT INTO resume (id, user_id, title, summary)
 VALUES
     (1, 0, 'Software Engineer Resume', 'Backend-focused engineer with experience in distributed systems, APIs, and cloud infrastructure.'),
     (2, 0, 'Full Stack Product Engineer Resume', 'Product-minded full stack developer with strong UX instincts and data-informed delivery.'),
     (3, 0, 'Data Engineer Resume', 'Data engineer specializing in analytics pipelines, orchestration, and warehouse modeling.');
 
-INSERT INTO "SECTION" (id, resumeId, title, "order", type)
+INSERT INTO section (id, resume_id, title, item_order, type)
 VALUES
     -- Resume 1
     (1, 1, 'Experience', 1, 'experience'),
@@ -112,7 +112,7 @@ VALUES
     (11, 3, 'Projects', 3, 'project'),
     (12, 3, 'Education', 4, 'education');
 
-INSERT INTO "SECTION_ITEM" (id, sectionId, label, value, startDate, endDate, location, description, "order")
+INSERT INTO section_item (id, section_id, label, value, start_date, end_date, location, description, item_order)
 VALUES
     -- Resume 1: Experience
     (1, 1, 'Senior Backend Engineer', 'Northwind Labs', '2022-03-01', NULL, 'Boise, ID', 'Led API platform modernization and reliability initiatives.', 1),
@@ -144,7 +144,7 @@ VALUES
     -- Resume 3: Education
     (17, 12, 'B.S. Information Systems', 'University of Oregon', '2013-09-15', '2017-06-15', 'Eugene, OR', NULL, 1);
 
-INSERT INTO "BULLET_POINT" (id, sectionId, content, "order")
+INSERT INTO bullet_point (id, section_id, content, item_order)
 VALUES
     -- Resume 1: Experience bullets
     (1, 1, 'Reduced p95 API latency by 38 percent by introducing query caching and connection pooling.', 1),
