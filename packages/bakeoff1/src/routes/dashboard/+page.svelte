@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { DropdownMenu } from 'bits-ui';
+  import { AlertDialog, DropdownMenu } from 'bits-ui';
   import Editable from '$lib/components/Editable.svelte';
   import type { PageData } from './$types';
 
@@ -34,6 +34,23 @@
     formData.set('title', nextTitle);
 
     const response = await fetch('?/rename', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      resumes = previous;
+    }
+  }
+
+  async function deleteResume(id: string) {
+    const previous = resumes;
+    resumes = resumes.filter((resume) => resume.id !== id);
+
+    const formData = new FormData();
+    formData.set('resumeId', id);
+
+    const response = await fetch('?/delete', {
       method: 'POST',
       body: formData,
     });
@@ -93,14 +110,11 @@
       <div class="actions" aria-label="Endless resume operations">
         <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
         <a class="btn" href={getEditorUrl(highlightedResume.id)}>Edit</a>
-        <button class="btn danger" type="button">Delete</button>
 
         <DropdownMenu.Root>
           <DropdownMenu.Trigger class="btn menu-trigger">More</DropdownMenu.Trigger>
           <DropdownMenu.Content class="menu-content" sideOffset={8}>
             <DropdownMenu.Item>Edit</DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item>Delete</DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       </div>
@@ -148,7 +162,24 @@
         <div class="actions compact" aria-label={`${resume.title} operations`}>
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
           <a class="btn" href={getEditorUrl(resume.id)}>Edit</a>
-          <button class="btn danger" type="button">Delete</button>
+          <AlertDialog.Root>
+            <AlertDialog.Trigger class="btn danger">Delete</AlertDialog.Trigger>
+            <AlertDialog.Portal>
+              <AlertDialog.Overlay class="dialog-overlay" />
+              <AlertDialog.Content class="dialog-content">
+                <AlertDialog.Title>Delete Resume?</AlertDialog.Title>
+                <AlertDialog.Description>
+                  This will permanently delete "{resume.title}" and all associated sections.
+                </AlertDialog.Description>
+                <div class="dialog-actions">
+                  <AlertDialog.Cancel class="btn">Cancel</AlertDialog.Cancel>
+                  <AlertDialog.Action class="btn danger" onclick={() => deleteResume(resume.id)}>
+                    Delete Resume
+                  </AlertDialog.Action>
+                </div>
+              </AlertDialog.Content>
+            </AlertDialog.Portal>
+          </AlertDialog.Root>
         </div>
       </article>
     {/each}
@@ -329,9 +360,47 @@
     color: #fff;
   }
 
-  .btn.danger {
+  :global(.btn.danger) {
     border-color: rgb(159 47 47 / 35%);
     color: var(--danger);
+  }
+
+  :global(.dialog-overlay) {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 45%);
+    z-index: 1000;
+  }
+
+  :global(.dialog-content) {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(92vw, 440px);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 0.9rem;
+    box-shadow: 0 20px 40px rgb(0 0 0 / 18%);
+    padding: 1rem;
+    z-index: 1001;
+  }
+
+  :global(.dialog-content h2),
+  :global(.dialog-content h3) {
+    margin: 0;
+  }
+
+  :global(.dialog-content p) {
+    margin: 0.6rem 0 0;
+    color: var(--muted);
+  }
+
+  .dialog-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: end;
+    gap: 0.55rem;
   }
 
   .resume-grid {

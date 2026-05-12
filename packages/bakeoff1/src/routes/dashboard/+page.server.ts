@@ -106,4 +106,28 @@ export const actions: Actions = {
 
     return { ok: true };
   },
+  delete: async ({ request }) => {
+    const formData = await request.formData();
+    const resumeIdRaw = String(formData.get('resumeId') ?? '');
+    const resumeId = parseResumeId(resumeIdRaw);
+
+    if (resumeId === null) {
+      return fail(400, { message: 'Invalid resume id' });
+    }
+
+    const result = await db.query<{ id: number }>(
+      `
+      DELETE FROM resume
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+      `,
+      [resumeId, 0]
+    );
+
+    if (result.rowCount === 0) {
+      return fail(404, { message: 'Resume not found' });
+    }
+
+    return { ok: true };
+  },
 };
