@@ -14,14 +14,14 @@
     "prepare": "node .husky/prepare.ts"
   },
   "devDependencies": {
-    "@eslint/compat": "^2.0.5",
+    "@eslint/compat": "^2.1.0",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.17.1",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
-    "typescript-eslint": "^8.59.2"
+    "lint-staged": "^17.0.5",
+    "typescript-eslint": "^8.59.3"
   }
 }

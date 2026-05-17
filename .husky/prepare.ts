@@ -11,11 +11,11 @@ if (process.env.npm_command === 'ci') {
 }
 
 try {
-  console.info('Ensuring Husky hooks are setup');
+  console.info('> Ensuring Husky hooks are setup');
   const { stdout, stderr } = await execAsync('npx husky');
   if (stdout) console.info(stdout);
   if (stderr) console.error(stderr);
 } catch (err) {
-  console.error('Failed to install Husky:', err);
+  console.error('❌ Failed to install Husky:', err);
   process.exit(1);
 }
