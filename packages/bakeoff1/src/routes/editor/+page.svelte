@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { enhance } from '$app/forms';
   import PreviewModal from '$lib/components/PreviewModal.svelte';
   import type { PageData } from './$types';
@@ -112,6 +113,16 @@
     </p>
     <div class="topbar-actions">
       <button type="button" class="action" onclick={() => (previewOpen = true)}>Preview</button>
+      {#if data.resume}
+        <a
+          class="action"
+          href={resolve(`/print?resumeId=${data.resume.id}`)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Print Page
+        </a>
+      {/if}
       <button type="submit" class="action" form="resume-save-form">
         {saveState === 'saving' ? 'Saving...' : 'Save'}
       </button>
