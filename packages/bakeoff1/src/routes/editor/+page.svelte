@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import PreviewModal from '$lib/components/PreviewModal.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -11,6 +12,7 @@
   let draftSummary = $state('');
   let sections = $state<ResumeSection[]>([]);
   let nextTempBulletId = $state(-1);
+  let previewOpen = $state(false);
   let saveState = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
   let savedMessageTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -109,7 +111,7 @@
       {mode === 'edit' ? `Editing Resume #${data.resume?.id ?? ''}` : 'New Resume'}
     </p>
     <div class="topbar-actions">
-      <button type="button" class="action">Preview</button>
+      <button type="button" class="action" onclick={() => (previewOpen = true)}>Preview</button>
       <button type="submit" class="action" form="resume-save-form">
         {saveState === 'saving' ? 'Saving...' : 'Save'}
       </button>
@@ -240,6 +242,14 @@
     </section>
   {/if}
 </main>
+
+<PreviewModal
+  open={previewOpen}
+  title={draftTitle}
+  summary={draftSummary}
+  {sections}
+  onClose={() => (previewOpen = false)}
+/>
 
 <style>
   .editor-page {
