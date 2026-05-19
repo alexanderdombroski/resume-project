@@ -2,19 +2,24 @@
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
+  type ResumeSection = NonNullable<PageData['resume']>['sections'][number];
 
   const mode = $derived(data.mode);
 
-  let draftTitle = $state(data.resume?.title ?? 'Untitled Resume');
-  let draftSummary = $state(data.resume?.summary ?? '');
-  let sections = $state(
-    (data.resume?.sections ?? []).map((section) => ({
+  let draftTitle = $state('Untitled Resume');
+  let draftSummary = $state('');
+  let sections = $state<ResumeSection[]>([]);
+  let nextTempBulletId = $state(-1);
+
+  $effect(() => {
+    draftTitle = data.resume?.title ?? 'Untitled Resume';
+    draftSummary = data.resume?.summary ?? '';
+    sections = (data.resume?.sections ?? []).map((section) => ({
       ...section,
       items: [...section.items],
       bullets: [...section.bullets],
-    }))
-  );
-  let nextTempBulletId = $state(-1);
+    }));
+  });
 
   function addBullet(sectionId: number) {
     sections = sections.map((section) =>
