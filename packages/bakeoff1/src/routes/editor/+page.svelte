@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -10,13 +11,23 @@
   let draftSummary = $state('');
   let sections = $state<ResumeSection[]>([]);
   let nextTempBulletId = $state(-1);
+  let saveState = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  let savedMessageTimer: ReturnType<typeof setTimeout> | null = null;
 
   $effect(() => {
     draftTitle = data.resume?.title ?? 'Untitled Resume';
     draftSummary = data.resume?.summary ?? '';
     sections = (data.resume?.sections ?? []).map((section) => ({
       ...section,
-      items: [...section.items],
+      items: section.items.map((item) => ({
+        ...item,
+        label: item.label ?? '',
+        value: item.value ?? '',
+        start_date: item.start_date ?? '',
+        end_date: item.end_date ?? '',
+        location: item.location ?? '',
+        description: item.description ?? '',
+      })),
       bullets: [...section.bullets],
     }));
   });
@@ -50,6 +61,46 @@
         : section
     );
   }
+
+  function serializeSections(payloadSections: ResumeSection[]) {
+    return JSON.stringify(
+      payloadSections.map((section, sectionIndex) => ({
+        id: section.id,
+        items: section.items.map((item, itemIndex) => ({
+          ...item,
+          item_order: itemIndex,
+        })),
+        bullets: section.bullets.map((bullet, bulletIndex) => ({
+          ...bullet,
+          item_order: bulletIndex,
+        })),
+        item_order: sectionIndex,
+      }))
+    );
+  }
+
+  function handleEnhance() {
+    saveState = 'saving';
+    return async ({
+      result,
+      update,
+    }: {
+      result: { type: string };
+      update: () => Promise<void>;
+    }) => {
+      if (result.type === 'success') {
+        await update();
+        saveState = 'saved';
+        if (savedMessageTimer) clearTimeout(savedMessageTimer);
+        savedMessageTimer = setTimeout(() => {
+          saveState = 'idle';
+        }, 2500);
+        return;
+      }
+
+      saveState = 'error';
+    };
+  }
 </script>
 
 <main class="editor-page">
@@ -59,104 +110,128 @@
     </p>
     <div class="topbar-actions">
       <button type="button" class="action">Preview</button>
-      <button type="button" class="action">Save Draft</button>
+      <button type="submit" class="action" form="resume-save-form">
+        {saveState === 'saving' ? 'Saving...' : 'Save'}
+      </button>
+      {#if saveState === 'saved'}
+        <span class="save-indicator" role="status" aria-live="polite">Saved</span>
+      {:else if saveState === 'error'}
+        <span class="save-indicator error" role="alert">Save failed</span>
+      {/if}
     </div>
   </div>
 
   {#if mode === 'edit' && data.resume}
-    <article class="resume-sheet" aria-label="Resume editor">
-      <header class="sheet-header">
-        <input class="resume-title" bind:value={draftTitle} aria-label="Resume title" />
-        <p class="sub-meta">Candidate profile for tailoring • User {data.resume.userId}</p>
-      </header>
+    <form id="resume-save-form" method="POST" action="?/save" use:enhance={handleEnhance}>
+      <input type="hidden" name="resumeId" value={data.resume.id} />
+      <input type="hidden" name="sections" value={serializeSections(sections)} />
+      <article class="resume-sheet" aria-label="Resume editor">
+        <header class="sheet-header">
+          <input
+            class="resume-title"
+            bind:value={draftTitle}
+            name="title"
+            aria-label="Resume title"
+          />
+          <p class="sub-meta">Candidate profile for tailoring • User {data.resume.userId}</p>
+        </header>
 
-      <section class="summary" aria-label="Professional summary">
-        <h2>Professional Summary</h2>
-        <textarea
-          bind:value={draftSummary}
-          rows="4"
-          placeholder="Add a concise summary tailored to the role"
-        ></textarea>
-      </section>
+        <section class="summary" aria-label="Professional summary">
+          <h2>Professional Summary</h2>
+          <textarea
+            bind:value={draftSummary}
+            name="summary"
+            rows="4"
+            placeholder="Add a concise summary tailored to the role"
+          ></textarea>
+        </section>
 
-      <section class="resume-sections" aria-label="Resume sections">
-        {#each sections as section (section.id)}
-          <section class="resume-section">
-            <header class="section-header">
-              <h2>{section.title}</h2>
-              <span>{section.type ?? 'Section'}</span>
-            </header>
+        <section class="resume-sections" aria-label="Resume sections">
+          {#each sections as section, sectionIndex (section.id)}
+            <section class="resume-section">
+              <header class="section-header">
+                <h2>{section.title}</h2>
+                <span>{section.type ?? 'Section'}</span>
+              </header>
 
-            {#if section.items.length > 0}
-              <div class="entries">
-                {#each section.items as item (item.id)}
-                  <article class="entry-row">
-                    <div class="entry-head">
-                      <input
-                        value={item.label ?? ''}
-                        aria-label="Entry label"
-                        placeholder="Role or degree"
-                      />
-                      <input
-                        value={item.value ?? ''}
-                        aria-label="Entry value"
-                        placeholder="Company or school"
-                      />
-                    </div>
-                    <div class="entry-meta">
-                      <input
-                        value={item.start_date ?? ''}
-                        aria-label="Start date"
-                        placeholder="Start"
-                      />
-                      <input value={item.end_date ?? ''} aria-label="End date" placeholder="End" />
-                      <input
-                        value={item.location ?? ''}
-                        aria-label="Location"
-                        placeholder="Location"
-                      />
-                    </div>
-                    <textarea rows="2" aria-label="Entry description" placeholder="Scope and impact"
-                      >{item.description ?? ''}</textarea
-                    >
-                  </article>
-                {/each}
-              </div>
-            {/if}
-
-            <div class="bullets">
-              {#if section.bullets.length > 0}
-                {#each section.bullets as bullet (bullet.id)}
-                  <div class="bullet-line">
-                    <span class="marker" aria-hidden="true">•</span>
-                    <input
-                      value={bullet.content}
-                      aria-label="Bullet point"
-                      placeholder="Achievement bullet"
-                    />
-                    <button
-                      class="remove-bullet"
-                      type="button"
-                      aria-label="Remove bullet"
-                      title="Remove bullet"
-                      onclick={() => removeBullet(section.id, bullet.id)}
-                    >
-                      &minus;
-                    </button>
-                  </div>
-                {/each}
-              {:else}
-                <p class="empty">No bullet points yet.</p>
+              {#if section.items.length > 0}
+                <div class="entries">
+                  {#each section.items as item, itemIndex (item.id)}
+                    <article class="entry-row">
+                      <div class="entry-head">
+                        <input
+                          bind:value={sections[sectionIndex].items[itemIndex].label}
+                          aria-label="Entry label"
+                          placeholder="Role or degree"
+                        />
+                        <input
+                          bind:value={sections[sectionIndex].items[itemIndex].value}
+                          aria-label="Entry value"
+                          placeholder="Company or school"
+                        />
+                      </div>
+                      <div class="entry-meta">
+                        <input
+                          bind:value={sections[sectionIndex].items[itemIndex].start_date}
+                          aria-label="Start date"
+                          placeholder="Start"
+                        />
+                        <input
+                          bind:value={sections[sectionIndex].items[itemIndex].end_date}
+                          aria-label="End date"
+                          placeholder="End"
+                        />
+                        <input
+                          bind:value={sections[sectionIndex].items[itemIndex].location}
+                          aria-label="Location"
+                          placeholder="Location"
+                        />
+                      </div>
+                      <textarea
+                        bind:value={sections[sectionIndex].items[itemIndex].description}
+                        rows="2"
+                        aria-label="Entry description"
+                        placeholder="Scope and impact"
+                      ></textarea>
+                    </article>
+                  {/each}
+                </div>
               {/if}
 
-              <button class="add-bullet" type="button" onclick={() => addBullet(section.id)}>
-                + Add bullet point
-              </button>
-            </div>
-          </section>
-        {/each}
-      </section>
-    </article>
+              <div class="bullets">
+                {#if section.bullets.length > 0}
+                  {#each section.bullets as bullet, bulletIndex (bullet.id)}
+                    <div class="bullet-line">
+                      <span class="marker" aria-hidden="true">•</span>
+                      <input
+                        bind:value={sections[sectionIndex].bullets[bulletIndex].content}
+                        aria-label="Bullet point"
+                        placeholder="Achievement bullet"
+                      />
+                      <button
+                        class="remove-bullet"
+                        type="button"
+                        aria-label="Remove bullet"
+                        title="Remove bullet"
+                        onclick={() => removeBullet(section.id, bullet.id)}
+                      >
+                        &minus;
+                      </button>
+                    </div>
+                  {/each}
+                {:else}
+                  <p class="empty">No bullet points yet.</p>
+                {/if}
+
+                <button class="add-bullet" type="button" onclick={() => addBullet(section.id)}>
+                  + Add bullet point
+                </button>
+              </div>
+            </section>
+          {/each}
+        </section>
+      </article>
+    </form>
   {:else}
     <section class="empty-state">
       <h1>Start a New Resume</h1>
@@ -196,6 +271,7 @@
 
   .topbar-actions {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
   }
 
@@ -205,6 +281,16 @@
     border-radius: 999px;
     padding: 0.35rem 0.75rem;
     font-size: 0.85rem;
+  }
+
+  .save-indicator {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .save-indicator.error {
+    color: #b42318;
   }
 
   .resume-sheet {
