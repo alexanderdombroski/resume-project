@@ -76,10 +76,12 @@
   }
 
   button {
-    padding: 0.35rem 0.75rem;
-    border: 1px solid #bbb;
+    border: 1px solid #d2c6b7;
     background: #fff;
-    border-radius: 4px;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    color: #1f1b15;
   }
 
   .resume h1 {

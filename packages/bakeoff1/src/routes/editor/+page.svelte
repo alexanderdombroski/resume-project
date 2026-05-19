@@ -302,6 +302,10 @@
     border-radius: 999px;
     padding: 0.35rem 0.75rem;
     font-size: 0.85rem;
+    color: var(--ink);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
   }
 
   .save-indicator {
