@@ -2,6 +2,8 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 
+const DEFAULT_USER_ID = 1;
+
 type DashboardResume = {
   id: string;
   title: string;
@@ -55,7 +57,7 @@ export const load: PageServerLoad = async () => {
     GROUP BY r.id
     ORDER BY r.updated_at DESC
   `,
-    [0]
+    [DEFAULT_USER_ID]
   );
 
   const resumes: DashboardResume[] = result.rows.map((row, index) => ({
@@ -97,7 +99,7 @@ export const actions: Actions = {
       WHERE id = $2 AND user_id = $3
       RETURNING id
       `,
-      [titleRaw, resumeId, 0]
+      [titleRaw, resumeId, DEFAULT_USER_ID]
     );
 
     if (result.rowCount === 0) {
@@ -121,7 +123,7 @@ export const actions: Actions = {
       WHERE id = $1 AND user_id = $2
       RETURNING id
       `,
-      [resumeId, 0]
+      [resumeId, DEFAULT_USER_ID]
     );
 
     if (result.rowCount === 0) {
@@ -160,7 +162,7 @@ export const actions: Actions = {
         WHERE id = $1 AND user_id = $2
         LIMIT 1
         `,
-        [resumeId, 0]
+        [resumeId, DEFAULT_USER_ID]
       );
 
       if (sourceResume.rowCount === 0) {
@@ -175,7 +177,7 @@ export const actions: Actions = {
         VALUES ($1, $2, $3, NOW(), NOW())
         RETURNING id
         `,
-        [0, `${source.title} (Copy)`, source.summary]
+        [DEFAULT_USER_ID, `${source.title} (Copy)`, source.summary]
       );
       const newResumeId = newResumeResult.rows[0].id;
 

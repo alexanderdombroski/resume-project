@@ -2,6 +2,8 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 
+const DEFAULT_USER_ID = 1;
+
 type ResumeRow = {
   id: number;
   user_id: number;
@@ -70,12 +72,12 @@ export const load: PageServerLoad = async ({ url }) => {
       WHERE id = $1 AND user_id = $2
       LIMIT 1
     `,
-    [parsedResumeId, 0]
+    [parsedResumeId, DEFAULT_USER_ID]
   );
 
   const resume = resumeResult.rows[0];
   if (!resume) {
-    throw error(404, `Resume ${parsedResumeId} not found for user 0`);
+    throw error(404, `Resume ${parsedResumeId} not found for user ${DEFAULT_USER_ID}`);
   }
 
   const sectionsResult = await db.query<SectionRow>(
