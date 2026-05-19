@@ -1,6 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db } from '$lib/server/db';
+import { withDbClient } from '$lib/server/db';
 
 const DEFAULT_USER_ID = 1;
 
@@ -84,95 +84,97 @@ export const load: PageServerLoad = async ({ url }) => {
     };
   }
 
-  const resumeResult = await db.query<ResumeRow>(
-    `
+  return withDbClient(async (client) => {
+    const resumeResult = await client.query<ResumeRow>(
+      `
       SELECT id, user_id, title, summary, created_at, updated_at
       FROM resume
       WHERE id = $1 AND user_id = $2
       LIMIT 1
     `,
-    [parsedResumeId, DEFAULT_USER_ID]
-  );
+      [parsedResumeId, DEFAULT_USER_ID]
+    );
 
-  const resume = resumeResult.rows[0];
-  if (!resume) {
-    throw error(404, `Resume ${parsedResumeId} not found for user ${DEFAULT_USER_ID}`);
-  }
+    const resume = resumeResult.rows[0];
+    if (!resume) {
+      throw error(404, `Resume ${parsedResumeId} not found for user ${DEFAULT_USER_ID}`);
+    }
 
-  const sectionsResult = await db.query<SectionRow>(
-    `
+    const sectionsResult = await client.query<SectionRow>(
+      `
       SELECT id, resume_id, title, type, item_order
       FROM section
       WHERE resume_id = $1
       ORDER BY item_order ASC, id ASC
     `,
-    [resume.id]
-  );
+      [resume.id]
+    );
 
-  const sectionIds = sectionsResult.rows.map((section) => section.id);
+    const sectionIds = sectionsResult.rows.map((section) => section.id);
 
-  let sectionItems: SectionItemRow[] = [];
-  let bullets: BulletRow[] = [];
+    let sectionItems: SectionItemRow[] = [];
+    let bullets: BulletRow[] = [];
 
-  if (sectionIds.length > 0) {
-    const [itemsResult, bulletsResult] = await Promise.all([
-      db.query<SectionItemRow>(
-        `
+    if (sectionIds.length > 0) {
+      const [itemsResult, bulletsResult] = await Promise.all([
+        client.query<SectionItemRow>(
+          `
           SELECT id, section_id, label, value, start_date, end_date, location, description, item_order
           FROM section_item
           WHERE section_id = ANY($1::int[])
           ORDER BY section_id ASC, item_order ASC, id ASC
         `,
-        [sectionIds]
-      ),
-      db.query<BulletRow>(
-        `
+          [sectionIds]
+        ),
+        client.query<BulletRow>(
+          `
           SELECT id, section_id, content, item_order
           FROM bullet_point
           WHERE section_id = ANY($1::int[])
           ORDER BY section_id ASC, item_order ASC, id ASC
         `,
-        [sectionIds]
-      ),
-    ]);
+          [sectionIds]
+        ),
+      ]);
 
-    sectionItems = itemsResult.rows;
-    bullets = bulletsResult.rows;
-  }
+      sectionItems = itemsResult.rows;
+      bullets = bulletsResult.rows;
+    }
 
-  const itemsBySection = new Map<number, SectionItemRow[]>();
-  for (const item of sectionItems) {
-    const list = itemsBySection.get(item.section_id) ?? [];
-    list.push(item);
-    itemsBySection.set(item.section_id, list);
-  }
+    const itemsBySection = new Map<number, SectionItemRow[]>();
+    for (const item of sectionItems) {
+      const list = itemsBySection.get(item.section_id) ?? [];
+      list.push(item);
+      itemsBySection.set(item.section_id, list);
+    }
 
-  const bulletsBySection = new Map<number, BulletRow[]>();
-  for (const bullet of bullets) {
-    const list = bulletsBySection.get(bullet.section_id) ?? [];
-    list.push(bullet);
-    bulletsBySection.set(bullet.section_id, list);
-  }
+    const bulletsBySection = new Map<number, BulletRow[]>();
+    for (const bullet of bullets) {
+      const list = bulletsBySection.get(bullet.section_id) ?? [];
+      list.push(bullet);
+      bulletsBySection.set(bullet.section_id, list);
+    }
 
-  return {
-    mode: 'edit' as const,
-    resume: {
-      id: resume.id,
-      userId: resume.user_id,
-      title: resume.title,
-      summary: resume.summary,
-      createdAt: resume.created_at,
-      updatedAt: resume.updated_at,
-      sections: sectionsResult.rows.map((section) => ({
-        id: section.id,
-        title: section.title,
-        type: section.type,
-        order: section.item_order,
-        items: itemsBySection.get(section.id) ?? [],
-        bullets: bulletsBySection.get(section.id) ?? [],
-      })),
-    },
-  };
+    return {
+      mode: 'edit' as const,
+      resume: {
+        id: resume.id,
+        userId: resume.user_id,
+        title: resume.title,
+        summary: resume.summary,
+        createdAt: resume.created_at,
+        updatedAt: resume.updated_at,
+        sections: sectionsResult.rows.map((section) => ({
+          id: section.id,
+          title: section.title,
+          type: section.type,
+          order: section.item_order,
+          items: itemsBySection.get(section.id) ?? [],
+          bullets: bulletsBySection.get(section.id) ?? [],
+        })),
+      },
+    };
+  });
 };
 
 export const actions: Actions = {
@@ -203,45 +205,45 @@ export const actions: Actions = {
       return fail(400, { message: 'Invalid sections payload' });
     }
 
-    const client = await db.connect();
-    try {
-      await client.query('BEGIN');
+    return withDbClient(async (client) => {
+      try {
+        await client.query('BEGIN');
 
-      const resumeUpdate = await client.query<{ id: number }>(
-        `
+        const resumeUpdate = await client.query<{ id: number }>(
+          `
           UPDATE resume
           SET title = $1, summary = $2, updated_at = NOW()
           WHERE id = $3 AND user_id = $4
           RETURNING id
         `,
-        [title, summary, resumeId, DEFAULT_USER_ID]
-      );
+          [title, summary, resumeId, DEFAULT_USER_ID]
+        );
 
-      if (resumeUpdate.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return fail(404, { message: 'Resume not found' });
-      }
+        if (resumeUpdate.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return fail(404, { message: 'Resume not found' });
+        }
 
-      const sectionIds = sections.map((section) => section.id);
-      const validSectionIdsResult = await client.query<{ id: number }>(
-        `
+        const sectionIds = sections.map((section) => section.id);
+        const validSectionIdsResult = await client.query<{ id: number }>(
+          `
           SELECT s.id
           FROM section s
           JOIN resume r ON r.id = s.resume_id
           WHERE r.id = $1 AND r.user_id = $2 AND s.id = ANY($3::int[])
         `,
-        [resumeId, DEFAULT_USER_ID, sectionIds]
-      );
-      const validSectionIds = new Set(validSectionIdsResult.rows.map((row) => row.id));
+          [resumeId, DEFAULT_USER_ID, sectionIds]
+        );
+        const validSectionIds = new Set(validSectionIdsResult.rows.map((row) => row.id));
 
-      for (const section of sections) {
-        if (!validSectionIds.has(section.id)) continue;
+        for (const section of sections) {
+          if (!validSectionIds.has(section.id)) continue;
 
-        for (const [idx, item] of section.items.entries()) {
-          if (item.id <= 0) continue;
+          for (const [idx, item] of section.items.entries()) {
+            if (item.id <= 0) continue;
 
-          await client.query(
-            `
+            await client.query(
+              `
               UPDATE section_item si
               SET
                 label = $1,
@@ -257,67 +259,66 @@ export const actions: Actions = {
                 AND si.section_id = s.id
                 AND s.id = $9
             `,
-            [
-              item.label?.trim() || null,
-              item.value?.trim() || null,
-              item.start_date?.trim() || null,
-              item.end_date?.trim() || null,
-              item.location?.trim() || null,
-              item.description?.trim() || null,
-              Number.isInteger(item.item_order) ? item.item_order : idx,
-              item.id,
-              section.id,
-            ]
-          );
-        }
+              [
+                item.label?.trim() || null,
+                item.value?.trim() || null,
+                item.start_date?.trim() || null,
+                item.end_date?.trim() || null,
+                item.location?.trim() || null,
+                item.description?.trim() || null,
+                Number.isInteger(item.item_order) ? item.item_order : idx,
+                item.id,
+                section.id,
+              ]
+            );
+          }
 
-        const persistedBulletIds = section.bullets
-          .filter((bullet) => bullet.id > 0)
-          .map((bullet) => bullet.id);
-        await client.query(
-          `
+          const persistedBulletIds = section.bullets
+            .filter((bullet) => bullet.id > 0)
+            .map((bullet) => bullet.id);
+          await client.query(
+            `
             DELETE FROM bullet_point
             WHERE section_id = $1
               AND id NOT IN (
                 SELECT unnest($2::int[])
               )
           `,
-          [section.id, persistedBulletIds.length > 0 ? persistedBulletIds : [0]]
-        );
+            [section.id, persistedBulletIds.length > 0 ? persistedBulletIds : [0]]
+          );
 
-        for (const [idx, bullet] of section.bullets.entries()) {
-          const content = bullet.content.trim();
-          if (!content) continue;
+          for (const [idx, bullet] of section.bullets.entries()) {
+            const content = bullet.content.trim();
+            if (!content) continue;
 
-          const itemOrder = Number.isInteger(bullet.item_order) ? bullet.item_order : idx;
-          if (bullet.id > 0) {
-            await client.query(
-              `
+            const itemOrder = Number.isInteger(bullet.item_order) ? bullet.item_order : idx;
+            if (bullet.id > 0) {
+              await client.query(
+                `
                 UPDATE bullet_point
                 SET content = $1, item_order = $2
                 WHERE id = $3 AND section_id = $4
               `,
-              [content, itemOrder, bullet.id, section.id]
-            );
-          } else {
-            await client.query(
-              `
+                [content, itemOrder, bullet.id, section.id]
+              );
+            } else {
+              await client.query(
+                `
                 INSERT INTO bullet_point (section_id, content, item_order)
                 VALUES ($1, $2, $3)
               `,
-              [section.id, content, itemOrder]
-            );
+                [section.id, content, itemOrder]
+              );
+            }
           }
         }
-      }
 
-      await client.query('COMMIT');
-      return { success: true };
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+        await client.query('COMMIT');
+        return { success: true };
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      }
+    });
   },
 };
