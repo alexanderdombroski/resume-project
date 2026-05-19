@@ -29,6 +29,9 @@ jobs:
         run: |
           npm run gen --workspace=${{ env.PACKAGE_PATH }}
           npm run build --workspace=${{ env.PACKAGE_PATH }}
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_URI: 
       - name: Deploy
         run: npx wrangler deploy
         working-directory: ${{ env.PACKAGE_PATH }}

@@ -86,13 +86,13 @@ CREATE TABLE IF NOT EXISTS section_item (
 -- ==================================================
 
 INSERT INTO app_user (id, email, password_hash)
-VALUES (0, 'testperson@example.com', 'test_hash');
+VALUES (1, 'testperson@example.com', 'test_hash');
 
 INSERT INTO resume (id, user_id, title, summary)
 VALUES
-    (1, 0, 'Software Engineer Resume', 'Backend-focused engineer with experience in distributed systems, APIs, and cloud infrastructure.'),
-    (2, 0, 'Full Stack Product Engineer Resume', 'Product-minded full stack developer with strong UX instincts and data-informed delivery.'),
-    (3, 0, 'Data Engineer Resume', 'Data engineer specializing in analytics pipelines, orchestration, and warehouse modeling.');
+    (1, 1, 'Software Engineer Resume', 'Backend-focused engineer with experience in distributed systems, APIs, and cloud infrastructure.'),
+    (2, 1, 'Full Stack Product Engineer Resume', 'Product-minded full stack developer with strong UX instincts and data-informed delivery.'),
+    (3, 1, 'Data Engineer Resume', 'Data engineer specializing in analytics pipelines, orchestration, and warehouse modeling.');
 
 INSERT INTO section (id, resume_id, title, item_order, type)
 VALUES
