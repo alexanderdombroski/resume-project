@@ -5,4 +5,5 @@ const { Pool } = pg;
 
 export const db = new Pool({
   connectionString: DATABASE_URI,
+  ssl: import.meta.env.PROD,
 });
