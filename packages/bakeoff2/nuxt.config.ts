@@ -8,6 +8,8 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint'],
   routeRules: {
     '/': { prerender: true },
+    '/dashboard': { prerender: true },
+    '/api/**': { prerender: false },
   },
   nitro: {
     vercel: {
