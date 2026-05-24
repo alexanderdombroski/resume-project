@@ -11,8 +11,8 @@ run `npm install` to download all packages necessary for each prototype.
 This is a monorepo of several prototypes in different stacks.
 
 - [Bakeoff 1](packages/bakeoff1) - SSR: Svelte, SvelteKit w/ Cloudflare adapter, Serverless Edge functions, Postgres, Neon
-- [Bakeoff 2](packages/bakeoff2) - SSG Client: Vue, Nuxt, Vercel Serverless
-- [Bakeoff 3](packages/bakeoff3) - Dynamic Client: Solid, Static Astro w/ Netlify adapter, Serverless Lambdas, MongoDB, MongoDB Atlas
+- [Bakeoff 2](packages/bakeoff2) - SSG Client: Vue, Nuxt, Vercel Serverless, MongoDB, MongoDB Atlas
+- [Bakeoff 3](packages/bakeoff3) - Dynamic Client: Solid, Static Astro w/ Netlify adapter, Serverless Lambdas
 
 **Site Links**
 
