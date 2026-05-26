@@ -1,4 +1,5 @@
 import { withDB } from '../../utils/db';
+import type { Db } from 'mongodb';
 
 type SectionItemPayload = {
   id: number;
@@ -37,6 +38,17 @@ type ResumeUpdateBody = {
   sections: SectionPayload[];
 };
 
+async function getNextId(db: Db, collectionName: string) {
+  const highest = await db
+    .collection<{ id: number }>(collectionName)
+    .find({}, { projection: { _id: 0, id: 1 } })
+    .sort({ id: -1 })
+    .limit(1)
+    .toArray();
+
+  return (highest[0]?.id ?? 0) + 1;
+}
+
 export default defineEventHandler(async (event) => {
   const idParam = getRouterParam(event, 'id');
   const id = Number(idParam);
@@ -59,6 +71,7 @@ export default defineEventHandler(async (event) => {
 
   return withDB(async (db) => {
     const now = new Date();
+    let nextBulletId: number | null = null;
 
     const resumeResult = await db.collection('resume').updateOne(
       { id },
@@ -110,15 +123,30 @@ export default defineEventHandler(async (event) => {
       }
 
       for (const bullet of section.bullet_points ?? []) {
-        await db.collection('bullet_point').updateOne(
-          { id: bullet.id, section_id: section.id },
-          {
-            $set: {
-              content: bullet.content,
-              item_order: bullet.item_order,
-            },
-          }
-        );
+        if (bullet.id > 0) {
+          await db.collection('bullet_point').updateOne(
+            { id: bullet.id, section_id: section.id },
+            {
+              $set: {
+                content: bullet.content,
+                item_order: bullet.item_order,
+              },
+            }
+          );
+          continue;
+        }
+
+        if (nextBulletId === null) {
+          nextBulletId = await getNextId(db, 'bullet_point');
+        }
+
+        await db.collection('bullet_point').insertOne({
+          id: nextBulletId,
+          section_id: section.id,
+          content: bullet.content,
+          item_order: bullet.item_order,
+        });
+        nextBulletId += 1;
       }
     }
 

@@ -70,10 +70,12 @@
         </ul>
 
         <EditableBulletList
-          v-if="section.bullet_points.length"
           :bullets="section.bullet_points"
           @update="onBulletUpdate(section.id, $event)"
         />
+        <button type="button" class="btn btn-add-bullet" @click="addBulletPoint(section.id)">
+          Add bullet point
+        </button>
       </article>
     </div>
   </section>
@@ -223,6 +225,37 @@ function onBulletUpdate(sectionId: number, payload: { id: number; content: strin
   };
 }
 
+function addBulletPoint(sectionId: number) {
+  if (!data.value) return;
+
+  const nextTempId =
+    Math.min(
+      0,
+      ...data.value.sections.flatMap((section) =>
+        section.bullet_points.map((bullet) => bullet.id).filter((id) => id <= 0)
+      )
+    ) - 1;
+
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      return {
+        ...section,
+        bullet_points: [
+          ...section.bullet_points,
+          {
+            id: nextTempId,
+            section_id: sectionId,
+            content: 'New bullet point',
+            item_order: section.bullet_points.length + 1,
+          },
+        ],
+      };
+    }),
+  };
+}
+
 function onSectionTitleUpdate(sectionId: number, title: string) {
   if (!data.value) return;
 
@@ -331,6 +364,10 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-add-bullet {
+  margin-top: 0.5rem;
 }
 
 .editor-header {
