@@ -22,6 +22,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/': { prerender: true },
     '/dashboard': { prerender: true },
+    '/editor': { prerender: true },
     '/api/**': { prerender: false },
   },
   nitro: {
