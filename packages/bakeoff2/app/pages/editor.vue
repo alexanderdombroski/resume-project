@@ -130,13 +130,21 @@ const resumeId = computed(() => {
   return Number.isInteger(parsed) ? parsed : null;
 });
 
-const apiPath = computed(() => (resumeId.value ? `/api/resumes/${resumeId.value}` : null));
+const { data, pending, error } = await useAsyncData<ResumeDetail | null>(
+  () => `resume-editor-${resumeId.value ?? 'missing'}`,
+  () => {
+    if (!resumeId.value) {
+      return Promise.resolve(null);
+    }
 
-const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
-  server: false,
-  immediate: true,
-  default: () => null,
-});
+    return $fetch<ResumeDetail>(`/api/resumes/${resumeId.value}`);
+  },
+  {
+    server: false,
+    immediate: true,
+    default: () => null,
+  }
+);
 
 const resume = computed(() => data.value);
 const isSaving = ref(false);
