@@ -14,7 +14,8 @@
         <div class="resume-card-top">
           <h2>{{ resume.title }}</h2>
           <div class="resume-actions">
-            <button type="button" class="btn btn-edit" @click="onEdit(resume.id)">Edit</button>
+            <NuxtLink class="btn btn-edit" :to="`/editor?resumeId=${resume.id}`">Edit</NuxtLink>
+            <NuxtLink class="btn btn-print" :to="`/print?resumeId=${resume.id}`">Print</NuxtLink>
             <button
               type="button"
               class="btn btn-delete"
@@ -50,10 +51,6 @@ const { data, pending, error } = await useFetch<Resume[]>('/api/resumes', {
 });
 const resumes = computed(() => data.value ?? []);
 const deletingId = ref<number | null>(null);
-
-function onEdit(id: number) {
-  navigateTo(`/dashboard/${id}`);
-}
 
 async function onDelete(id: number) {
   if (!confirm('Delete this resume? This cannot be undone.')) {
