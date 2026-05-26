@@ -1,7 +1,11 @@
 <template>
   <section class="editor">
     <div class="editor-actions">
-      <button type="button" class="btn">Save</button>
+      <button type="button" class="btn" :disabled="isSaving || !resume" @click="saveResume">
+        {{ isSaving ? 'Saving...' : 'Save Resume' }}
+      </button>
+      <p v-if="saveStatus === 'success'" class="status success">Resume saved.</p>
+      <p v-else-if="saveStatus === 'error'" class="status error">Could not save resume.</p>
     </div>
 
     <header class="editor-header">
@@ -27,7 +31,7 @@
     <p v-if="pending" class="status">Loading resume...</p>
     <p v-else-if="error" class="status error">Could not load resume.</p>
 
-    <div v-else-if="resume" class="sections">
+    <div v-if="resume" class="sections">
       <article v-for="section in resume.sections" :key="section.id" class="section-card">
         <h2>
           <EditableInlineText
@@ -133,6 +137,43 @@ const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
 });
 
 const resume = computed(() => data.value);
+const isSaving = ref(false);
+const saveStatus = ref<'idle' | 'success' | 'error'>('idle');
+let saveSuccessTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function saveResume() {
+  if (!resumeId.value || !data.value || isSaving.value) return;
+
+  if (saveSuccessTimer) {
+    clearTimeout(saveSuccessTimer);
+    saveSuccessTimer = null;
+  }
+
+  isSaving.value = true;
+  saveStatus.value = 'idle';
+
+  try {
+    await $fetch(`/api/resumes/${resumeId.value}`, {
+      method: 'PUT',
+      body: data.value,
+    });
+    saveStatus.value = 'success';
+    saveSuccessTimer = setTimeout(() => {
+      saveStatus.value = 'idle';
+      saveSuccessTimer = null;
+    }, 3000);
+  } catch {
+    saveStatus.value = 'error';
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+onBeforeUnmount(() => {
+  if (saveSuccessTimer) {
+    clearTimeout(saveSuccessTimer);
+  }
+});
 
 function onResumeTitleUpdate(title: string) {
   if (!data.value) return;
@@ -210,6 +251,8 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 
 .editor-actions {
   display: flex;
+  align-items: center;
+  gap: 0.65rem;
   justify-content: flex-end;
 }
 
@@ -226,6 +269,11 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 
 .btn:hover {
   border-color: #94a3b8;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .editor-header {
@@ -257,6 +305,10 @@ h1 {
 .status {
   margin: 0;
   color: #334155;
+}
+
+.status.success {
+  color: #166534;
 }
 
 .status.error {
