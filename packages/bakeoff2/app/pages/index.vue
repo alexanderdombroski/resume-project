@@ -9,32 +9,8 @@
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="/dashboard">Start Editing</a>
-        <a class="btn btn-ghost" href="#features">See Features</a>
+        <a class="btn btn-ghost" href="/features">See Features</a>
       </div>
-    </section>
-
-    <section id="features" class="features">
-      <article class="feature-card">
-        <h2>Focused Editing</h2>
-        <p>
-          Keep your sections organized with a clean editor built for experience,
-          projects, and impact bullets.
-        </p>
-      </article>
-      <article class="feature-card">
-        <h2>Tailored Versions</h2>
-        <p>
-          Duplicate and customize resumes for different roles while keeping your
-          core profile consistent.
-        </p>
-      </article>
-      <article class="feature-card">
-        <h2>Export Ready</h2>
-        <p>
-          Generate professional outputs that are easy to share with recruiters
-          and hiring teams.
-        </p>
-      </article>
     </section>
 
     <section class="cta">
@@ -121,31 +97,6 @@ h1 {
   border-color: #93c5fd;
 }
 
-.features {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.feature-card {
-  padding: 1.1rem 1.1rem 1.2rem;
-  border-radius: 0.9rem;
-  background: #fff;
-  border: 1px solid #dbeafe;
-  box-shadow: 0 10px 24px rgb(15 23 42 / 5%);
-}
-
-.feature-card h2 {
-  margin: 0 0 0.45rem;
-  font-size: 1.05rem;
-}
-
-.feature-card p {
-  margin: 0;
-  color: #334155;
-  line-height: 1.45;
-}
-
 .cta {
   border-radius: 1rem;
   border: 1px solid #cbd5e1;
@@ -162,10 +113,6 @@ h1 {
 }
 
 @media (max-width: 900px) {
-  .features {
-    grid-template-columns: 1fr;
-  }
-
   .hero {
     padding: 1.4rem;
   }

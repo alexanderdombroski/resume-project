@@ -21,6 +21,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint'],
   routeRules: {
     '/': { prerender: true },
+    '/features': { prerender: true },
     '/dashboard': { prerender: true },
     '/api/**': { prerender: false },
   },
