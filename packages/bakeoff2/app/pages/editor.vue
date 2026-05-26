@@ -1,5 +1,9 @@
 <template>
   <section class="editor">
+    <div class="editor-actions">
+      <button type="button" class="btn">Save</button>
+    </div>
+
     <header class="editor-header">
       <p class="kicker">Editor</p>
       <h1 v-if="resume">
@@ -202,6 +206,26 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 .editor {
   display: grid;
   gap: 1rem;
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: #94a3b8;
 }
 
 .editor-header {
