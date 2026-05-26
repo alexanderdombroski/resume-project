@@ -22,11 +22,11 @@
           </li>
         </ul>
 
-        <ul v-if="section.bullet_points.length" class="bullet-list">
-          <li v-for="bullet in section.bullet_points" :key="bullet.id">
-            {{ bullet.content }}
-          </li>
-        </ul>
+        <EditableBulletList
+          v-if="section.bullet_points.length"
+          :bullets="section.bullet_points"
+          @update="onBulletUpdate(section.id, $event)"
+        />
       </article>
     </div>
   </section>
@@ -92,6 +92,18 @@ const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
 });
 
 const resume = computed(() => data.value);
+
+function onBulletUpdate(sectionId: number, payload: { id: number; content: string }) {
+  if (!data.value) return;
+
+  const section = data.value.sections.find((entry) => entry.id === sectionId);
+  if (!section) return;
+
+  const bullet = section.bullet_points.find((entry) => entry.id === payload.id);
+  if (!bullet) return;
+
+  bullet.content = payload.content;
+}
 </script>
 
 <style scoped>
@@ -152,8 +164,7 @@ h1 {
   font-size: 1.1rem;
 }
 
-.item-list,
-.bullet-list {
+.item-list {
   margin: 0;
   padding-left: 1.2rem;
   color: #334155;
