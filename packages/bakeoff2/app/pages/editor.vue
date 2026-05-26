@@ -1,11 +1,13 @@
 <template>
   <section class="editor">
     <div class="editor-actions">
+      <p v-if="resume" class="dirty-indicator" :class="hasUnsavedChanges ? 'dirty' : 'clean'">
+        {{ hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved' }}
+      </p>
       <button type="button" class="btn" :disabled="isSaving || !resume" @click="saveResume">
         {{ isSaving ? 'Saving...' : 'Save Resume' }}
       </button>
-      <p v-if="saveStatus === 'success'" class="status success">Resume saved.</p>
-      <p v-else-if="saveStatus === 'error'" class="status error">Could not save resume.</p>
+      <p v-if="saveError" class="status error">Could not save resume.</p>
     </div>
 
     <header class="editor-header">
@@ -138,42 +140,47 @@ const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
 
 const resume = computed(() => data.value);
 const isSaving = ref(false);
-const saveStatus = ref<'idle' | 'success' | 'error'>('idle');
-let saveSuccessTimer: ReturnType<typeof setTimeout> | null = null;
+const saveError = ref(false);
+const lastSavedSnapshot = ref<ResumeDetail | null>(null);
+
+function cloneResume(value: ResumeDetail) {
+  return typeof structuredClone === 'function'
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value));
+}
+
+const hasUnsavedChanges = computed(() => {
+  if (!data.value || !lastSavedSnapshot.value) return false;
+  return JSON.stringify(data.value) !== JSON.stringify(lastSavedSnapshot.value);
+});
+
+watch(
+  () => data.value,
+  (next, previous) => {
+    if (!next || previous) return;
+    lastSavedSnapshot.value = cloneResume(next);
+  },
+  { immediate: true }
+);
 
 async function saveResume() {
   if (!resumeId.value || !data.value || isSaving.value) return;
 
-  if (saveSuccessTimer) {
-    clearTimeout(saveSuccessTimer);
-    saveSuccessTimer = null;
-  }
-
   isSaving.value = true;
-  saveStatus.value = 'idle';
+  saveError.value = false;
 
   try {
     await $fetch(`/api/resumes/${resumeId.value}`, {
       method: 'PUT',
       body: data.value,
     });
-    saveStatus.value = 'success';
-    saveSuccessTimer = setTimeout(() => {
-      saveStatus.value = 'idle';
-      saveSuccessTimer = null;
-    }, 3000);
+    lastSavedSnapshot.value = cloneResume(data.value);
   } catch {
-    saveStatus.value = 'error';
+    saveError.value = true;
   } finally {
     isSaving.value = false;
   }
 }
-
-onBeforeUnmount(() => {
-  if (saveSuccessTimer) {
-    clearTimeout(saveSuccessTimer);
-  }
-});
 
 function onResumeTitleUpdate(title: string) {
   if (!data.value) return;
@@ -282,6 +289,20 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
   align-items: center;
   gap: 0.65rem;
   justify-content: flex-end;
+}
+
+.dirty-indicator {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.dirty-indicator.dirty {
+  color: #b45309;
+}
+
+.dirty-indicator.clean {
+  color: #166534;
 }
 
 .btn {
