@@ -32,3 +32,32 @@ Other options for resume editors to check out.
 - [reactive resume](https://rxresu.me/)
 - [flowcv](https://flowcv.com/)
 - [vmock](https://www.vmock.com/)
+
+## Differences in rendering modes
+
+Some aspects of the app work really well with the different rendering models (SSR, SSG, CSR).
+
+If an app can benefit from all three, it may be helpful to pick a framework that can do all three, such as Nuxt or Astro.
+
+### SSR (bakeoff1)
+
+_For Dynamic, freqently-changing content_
+
+- Resume editor
+- Resume printer
+
+### SSG (bakeoff2)
+
+_For content-based, infreqently-changing content_
+
+- Feature list and development plan of the site
+- Resume template picker / preview
+- Static pages like the dashboard
+
+### CSR (bakeoff3)
+
+_All modes use CSR to a degree, but sometimes it's helpful if parts of page loading is completely isolated from the server_
+
+- Advanced editing features such as drag and drop or undo-redo
+- Some editor features must be used in CSR or the hydration of SSR, such as the resume height indicator
+- I didn't use a SPA, but a completely spa can have global state that stays in memory when switching pages. This would have been really helpful when adding printing.
