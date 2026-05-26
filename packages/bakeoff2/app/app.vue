@@ -18,6 +18,7 @@
           <NuxtLink to="/" class="nav-link">Home</NuxtLink>
           <NuxtLink to="/features" class="nav-link">Features</NuxtLink>
           <NuxtLink to="/dashboard" class="nav-link">Dashboard</NuxtLink>
+          <NuxtLink to="/templates" class="nav-link">Templates</NuxtLink>
         </nav>
       </div>
     </header>
