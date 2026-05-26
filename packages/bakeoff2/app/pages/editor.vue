@@ -177,69 +177,97 @@ onBeforeUnmount(() => {
 
 function onResumeTitleUpdate(title: string) {
   if (!data.value) return;
-  data.value.title = title;
+  data.value = {
+    ...data.value,
+    title,
+  };
 }
 
 function onResumeSummaryUpdate(summary: string) {
   if (!data.value) return;
-  data.value.summary = summary;
+  data.value = {
+    ...data.value,
+    summary,
+  };
 }
 
 function onBulletUpdate(sectionId: number, payload: { id: number; content: string }) {
   if (!data.value) return;
 
-  const section = data.value.sections.find((entry) => entry.id === sectionId);
-  if (!section) return;
-
-  const bullet = section.bullet_points.find((entry) => entry.id === payload.id);
-  if (!bullet) return;
-
-  bullet.content = payload.content;
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      return {
+        ...section,
+        bullet_points: section.bullet_points.map((bullet) =>
+          bullet.id === payload.id ? { ...bullet, content: payload.content } : bullet
+        ),
+      };
+    }),
+  };
 }
 
 function onSectionTitleUpdate(sectionId: number, title: string) {
   if (!data.value) return;
 
-  const section = data.value.sections.find((entry) => entry.id === sectionId);
-  if (!section) return;
-
-  section.title = title;
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) =>
+      section.id === sectionId ? { ...section, title } : section
+    ),
+  };
 }
 
 function onSubsectionTitleUpdate(sectionId: number, itemId: number, label: string) {
   if (!data.value) return;
 
-  const section = data.value.sections.find((entry) => entry.id === sectionId);
-  if (!section) return;
-
-  const subsection = section.items.find((entry) => entry.id === itemId);
-  if (!subsection) return;
-
-  subsection.label = label;
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      return {
+        ...section,
+        items: section.items.map((item) => (item.id === itemId ? { ...item, label } : item)),
+      };
+    }),
+  };
 }
 
 function onSubsectionValueUpdate(sectionId: number, itemId: number, value: string) {
   if (!data.value) return;
 
-  const section = data.value.sections.find((entry) => entry.id === sectionId);
-  if (!section) return;
-
-  const subsection = section.items.find((entry) => entry.id === itemId);
-  if (!subsection) return;
-
-  subsection.value = value || null;
+  const nextValue = value || null;
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      return {
+        ...section,
+        items: section.items.map((item) =>
+          item.id === itemId ? { ...item, value: nextValue } : item
+        ),
+      };
+    }),
+  };
 }
 
 function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, description: string) {
   if (!data.value) return;
 
-  const section = data.value.sections.find((entry) => entry.id === sectionId);
-  if (!section) return;
-
-  const subsection = section.items.find((entry) => entry.id === itemId);
-  if (!subsection) return;
-
-  subsection.description = description || null;
+  const nextDescription = description || null;
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      return {
+        ...section,
+        items: section.items.map((item) =>
+          item.id === itemId ? { ...item, description: nextDescription } : item
+        ),
+      };
+    }),
+  };
 }
 </script>
 
