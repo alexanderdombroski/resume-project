@@ -1,9 +1,12 @@
 <template>
   <section class="dashboard">
     <header class="dashboard-header">
-      <p class="kicker">Dashboard</p>
-      <h1>Your Resumes</h1>
-      <p>Choose a resume to continue editing.</p>
+      <div>
+        <p class="kicker">Dashboard</p>
+        <h1>Your Resumes</h1>
+        <p>Choose a resume to continue editing.</p>
+      </div>
+      <NuxtLink to="/templates" class="btn btn-create-new">Create New</NuxtLink>
     </header>
 
     <p v-if="pending" class="status">Loading resumes...</p>
@@ -78,6 +81,10 @@ async function onDelete(id: number) {
 }
 
 .dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
   padding: 1.2rem;
   border: 1px solid #dbeafe;
   border-radius: 0.9rem;
@@ -169,8 +176,27 @@ h1 {
   color: #b91c1c;
 }
 
+.btn-create-new {
+  text-decoration: none;
+  white-space: nowrap;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.btn-create-new:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
 .resume-card p {
   margin: 0.5rem 0 0;
   color: #334155;
+}
+
+@media (max-width: 640px) {
+  .dashboard-header {
+    flex-direction: column;
+  }
 }
 </style>

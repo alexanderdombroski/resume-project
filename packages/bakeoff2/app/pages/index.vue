@@ -16,7 +16,7 @@
     <section class="cta">
       <h2>Stop rewriting from scratch for every application.</h2>
       <p>Use Endless Resume to ship stronger resumes faster.</p>
-      <a class="btn btn-primary" href="/dashboard">Create My Resume</a>
+      <a class="btn btn-primary" href="/templates">Create My Resume</a>
     </section>
   </div>
 </template>
