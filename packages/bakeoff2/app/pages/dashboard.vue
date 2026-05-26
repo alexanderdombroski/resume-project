@@ -15,6 +15,7 @@
           <h2>{{ resume.title }}</h2>
           <div class="resume-actions">
             <NuxtLink class="btn btn-edit" :to="`/editor?resumeId=${resume.id}`">Edit</NuxtLink>
+            <NuxtLink class="btn btn-print" :to="`/print?resumeId=${resume.id}`">Print</NuxtLink>
             <button
               type="button"
               class="btn btn-delete"

@@ -23,6 +23,7 @@ export default defineNuxtConfig({
     '/': { prerender: true },
     '/dashboard': { prerender: true },
     '/editor': { prerender: true },
+    '/print': { prerender: true },
     '/api/**': { prerender: false },
   },
   nitro: {
