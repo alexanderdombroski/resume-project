@@ -72,6 +72,7 @@
         <EditableBulletList
           :bullets="section.bullet_points"
           @update="onBulletUpdate(section.id, $event)"
+          @remove="onBulletRemove(section.id, $event)"
         />
         <button type="button" class="btn btn-add-bullet" @click="addBulletPoint(section.id)">
           Add bullet point
@@ -251,6 +252,24 @@ function addBulletPoint(sectionId: number) {
             item_order: section.bullet_points.length + 1,
           },
         ],
+      };
+    }),
+  };
+}
+
+function onBulletRemove(sectionId: number, payload: { id: number }) {
+  if (!data.value) return;
+
+  data.value = {
+    ...data.value,
+    sections: data.value.sections.map((section) => {
+      if (section.id !== sectionId) return section;
+      const remainingBullets = section.bullet_points
+        .filter((bullet) => bullet.id !== payload.id)
+        .map((bullet, index) => ({ ...bullet, item_order: index + 1 }));
+      return {
+        ...section,
+        bullet_points: remainingBullets,
       };
     }),
   };

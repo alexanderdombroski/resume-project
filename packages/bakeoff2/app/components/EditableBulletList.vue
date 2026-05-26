@@ -9,6 +9,14 @@
       >
         {{ bullet.content }}
       </button>
+      <button
+        v-if="editingId !== bullet.id"
+        type="button"
+        class="mini-btn mini-btn-ghost mini-btn-remove"
+        @click="removeBullet(bullet.id)"
+      >
+        -
+      </button>
 
       <div v-else class="bullet-edit-row">
         <input
@@ -19,9 +27,18 @@
           @keydown.enter.prevent="saveEdit(bullet.id)"
           @keydown.esc.prevent="cancelEdit"
           @blur="saveEdit(bullet.id)"
+        />
+        <button type="button" class="mini-btn" @mousedown.prevent @click="saveEdit(bullet.id)">
+          Save
+        </button>
+        <button
+          type="button"
+          class="mini-btn mini-btn-ghost"
+          @mousedown.prevent
+          @click="cancelEdit"
         >
-        <button type="button" class="mini-btn" @mousedown.prevent @click="saveEdit(bullet.id)">Save</button>
-        <button type="button" class="mini-btn mini-btn-ghost" @mousedown.prevent @click="cancelEdit">Cancel</button>
+          Cancel
+        </button>
       </div>
     </li>
   </ul>
@@ -33,12 +50,13 @@ type BulletPoint = {
   content: string;
 };
 
-const props = defineProps<{
+defineProps<{
   bullets: BulletPoint[];
 }>();
 
 const emit = defineEmits<{
   update: [payload: { id: number; content: string }];
+  remove: [payload: { id: number }];
 }>();
 
 const editingId = ref<number | null>(null);
@@ -73,6 +91,10 @@ function cancelEdit() {
   editingId.value = null;
   draft.value = '';
 }
+
+function removeBullet(id: number) {
+  emit('remove', { id });
+}
 </script>
 
 <style scoped>
@@ -82,6 +104,13 @@ function cancelEdit() {
   color: #334155;
   display: grid;
   gap: 0.35rem;
+}
+
+.bullet-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: start;
 }
 
 .bullet-button {
@@ -130,5 +159,26 @@ function cancelEdit() {
   border-color: #cbd5e1;
   background: #fff;
   color: #334155;
+}
+
+.mini-btn-remove {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  padding: 0;
+  border-color: #fecaca;
+  color: #b91c1c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 700;
+  align-self: start;
+}
+
+.mini-btn-remove:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }
 </style>

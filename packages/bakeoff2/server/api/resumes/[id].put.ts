@@ -148,6 +148,15 @@ export default defineEventHandler(async (event) => {
         });
         nextBulletId += 1;
       }
+
+      const persistedBulletIds = section.bullet_points
+        .filter((bullet) => bullet.id > 0)
+        .map((bullet) => bullet.id);
+
+      await db.collection('bullet_point').deleteMany({
+        section_id: section.id,
+        ...(persistedBulletIds.length ? { id: { $nin: persistedBulletIds } } : {}),
+      });
     }
 
     return { ok: true, id, updated_at: now.toISOString() };
