@@ -2,8 +2,21 @@
   <section class="editor">
     <header class="editor-header">
       <p class="kicker">Editor</p>
-      <h1>{{ resume?.title ?? 'Resume Editor' }}</h1>
-      <p v-if="resume">{{ resume.summary }}</p>
+      <h1 v-if="resume">
+        <EditableInlineText
+          :model-value="resume.title"
+          placeholder="Resume title"
+          @update:model-value="onResumeTitleUpdate"
+        />
+      </h1>
+      <h1 v-else>Resume Editor</h1>
+      <p v-if="resume">
+        <EditableInlineText
+          :model-value="resume.summary"
+          placeholder="Add overall resume summary"
+          @update:model-value="onResumeSummaryUpdate"
+        />
+      </p>
       <p v-else-if="!resumeId" class="status error">Missing resumeId query param.</p>
     </header>
 
@@ -12,13 +25,37 @@
 
     <div v-else-if="resume" class="sections">
       <article v-for="section in resume.sections" :key="section.id" class="section-card">
-        <h2>{{ section.title }}</h2>
+        <h2>
+          <EditableInlineText
+            :model-value="section.title"
+            @update:model-value="onSectionTitleUpdate(section.id, $event)"
+          />
+        </h2>
 
         <ul v-if="section.items.length" class="item-list">
           <li v-for="item in section.items" :key="item.id">
-            <strong>{{ item.label }}</strong>
-            <span v-if="item.value"> · {{ item.value }}</span>
-            <p v-if="item.description">{{ item.description }}</p>
+            <strong>
+              <EditableInlineText
+                :model-value="item.label"
+                placeholder="Subsection title"
+                @update:model-value="onSubsectionTitleUpdate(section.id, item.id, $event)"
+              />
+            </strong>
+            <span>
+              ·
+              <EditableInlineText
+                :model-value="item.value ?? ''"
+                placeholder="Add location or subtitle"
+                @update:model-value="onSubsectionValueUpdate(section.id, item.id, $event)"
+              />
+            </span>
+            <p>
+              <EditableInlineText
+                :model-value="item.description ?? ''"
+                placeholder="Add subsection description"
+                @update:model-value="onSubsectionDescriptionUpdate(section.id, item.id, $event)"
+              />
+            </p>
           </li>
         </ul>
 
@@ -93,6 +130,16 @@ const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
 
 const resume = computed(() => data.value);
 
+function onResumeTitleUpdate(title: string) {
+  if (!data.value) return;
+  data.value.title = title;
+}
+
+function onResumeSummaryUpdate(summary: string) {
+  if (!data.value) return;
+  data.value.summary = summary;
+}
+
 function onBulletUpdate(sectionId: number, payload: { id: number; content: string }) {
   if (!data.value) return;
 
@@ -103,6 +150,51 @@ function onBulletUpdate(sectionId: number, payload: { id: number; content: strin
   if (!bullet) return;
 
   bullet.content = payload.content;
+}
+
+function onSectionTitleUpdate(sectionId: number, title: string) {
+  if (!data.value) return;
+
+  const section = data.value.sections.find((entry) => entry.id === sectionId);
+  if (!section) return;
+
+  section.title = title;
+}
+
+function onSubsectionTitleUpdate(sectionId: number, itemId: number, label: string) {
+  if (!data.value) return;
+
+  const section = data.value.sections.find((entry) => entry.id === sectionId);
+  if (!section) return;
+
+  const subsection = section.items.find((entry) => entry.id === itemId);
+  if (!subsection) return;
+
+  subsection.label = label;
+}
+
+function onSubsectionValueUpdate(sectionId: number, itemId: number, value: string) {
+  if (!data.value) return;
+
+  const section = data.value.sections.find((entry) => entry.id === sectionId);
+  if (!section) return;
+
+  const subsection = section.items.find((entry) => entry.id === itemId);
+  if (!subsection) return;
+
+  subsection.value = value || null;
+}
+
+function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, description: string) {
+  if (!data.value) return;
+
+  const section = data.value.sections.find((entry) => entry.id === sectionId);
+  if (!section) return;
+
+  const subsection = section.items.find((entry) => entry.id === itemId);
+  if (!subsection) return;
+
+  subsection.description = description || null;
 }
 </script>
 
