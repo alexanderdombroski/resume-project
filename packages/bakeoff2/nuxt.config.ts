@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     '/': { prerender: true },
     '/features': { prerender: true },
     '/dashboard': { prerender: true },
+    '/templates': { prerender: true },
     '/editor': { prerender: true },
     '/print': { prerender: true },
     '/api/**': { prerender: false },
