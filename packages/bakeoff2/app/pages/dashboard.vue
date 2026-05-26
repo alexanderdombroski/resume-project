@@ -11,7 +11,20 @@
 
     <ul v-else class="resume-list">
       <li v-for="resume in resumes" :key="resume.id" class="resume-card">
-        <h2>{{ resume.title }}</h2>
+        <div class="resume-card-top">
+          <h2>{{ resume.title }}</h2>
+          <div class="resume-actions">
+            <button type="button" class="btn btn-edit" @click="onEdit(resume.id)">Edit</button>
+            <button
+              type="button"
+              class="btn btn-delete"
+              :disabled="deletingId === resume.id"
+              @click="onDelete(resume.id)"
+            >
+              {{ deletingId === resume.id ? 'Deleting...' : 'Delete' }}
+            </button>
+          </div>
+        </div>
         <p>{{ resume.summary }}</p>
       </li>
     </ul>
@@ -36,6 +49,29 @@ const { data, pending, error } = await useFetch<Resume[]>('/api/resumes', {
   server: false,
 });
 const resumes = computed(() => data.value ?? []);
+const deletingId = ref<number | null>(null);
+
+function onEdit(id: number) {
+  navigateTo(`/dashboard/${id}`);
+}
+
+async function onDelete(id: number) {
+  if (!confirm('Delete this resume? This cannot be undone.')) {
+    return;
+  }
+
+  deletingId.value = id;
+
+  try {
+    await $fetch(`/api/resumes/${id}`, { method: 'DELETE' });
+
+    if (data.value) {
+      data.value = data.value.filter((resume) => resume.id !== id);
+    }
+  } finally {
+    deletingId.value = null;
+  }
+}
 </script>
 
 <style scoped>
@@ -94,9 +130,46 @@ h1 {
   padding: 1rem;
 }
 
+.resume-card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .resume-card h2 {
   margin: 0;
   font-size: 1.05rem;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+
+.btn:hover:enabled {
+  border-color: #94a3b8;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-delete {
+  border-color: #fecaca;
+  color: #b91c1c;
 }
 
 .resume-card p {
