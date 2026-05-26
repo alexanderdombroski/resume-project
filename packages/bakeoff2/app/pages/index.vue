@@ -3,6 +3,7 @@
     <section class="hero">
       <p class="eyebrow">Smart Resume Editor</p>
       <h1>Build a job-ready resume in minutes, not hours.</h1>
+      <p class="mantra">Build once, tailor forever.</p>
       <p class="lead">
         Endless Resume helps you write, tailor, and export polished resumes with
         confidence.
@@ -62,6 +63,17 @@ h1 {
   max-width: 56ch;
   color: #334155;
   font-size: 1.03rem;
+}
+
+.mantra {
+  margin: 0.7rem 0 0;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 55%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .hero-actions {
