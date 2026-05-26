@@ -5,8 +5,7 @@
       <h1>Build a job-ready resume in minutes, not hours.</h1>
       <p class="mantra">Build once, tailor forever.</p>
       <p class="lead">
-        Endless Resume helps you write, tailor, and export polished resumes with
-        confidence.
+        Endless Resume helps you write, tailor, and export polished resumes with confidence.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="/dashboard">Start Editing</a>
