@@ -3,12 +3,22 @@
     <NuxtRouteAnnouncer />
 
     <header class="site-header">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">ER</span>
-        <div class="brand-copy">
-          <p class="brand-name">Endless Resume</p>
-          <p class="brand-tagline">Resume Editor</p>
-        </div>
+      <div class="header-inner">
+        <NuxtLink to="/" class="brand-link" aria-label="Go to home page">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">ER</span>
+            <div class="brand-copy">
+              <p class="brand-name">Endless Resume</p>
+              <p class="brand-tagline">Resume Editor</p>
+            </div>
+          </div>
+        </NuxtLink>
+
+        <nav class="site-nav" aria-label="Primary navigation">
+          <NuxtLink to="/" class="nav-link">Home</NuxtLink>
+          <NuxtLink to="/features" class="nav-link">Features</NuxtLink>
+          <NuxtLink to="/dashboard" class="nav-link">Dashboard</NuxtLink>
+        </nav>
       </div>
     </header>
 
@@ -44,12 +54,24 @@
   padding: 1rem 1.25rem;
 }
 
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  max-width: 1100px;
-  margin: 0 auto;
+}
+
+.brand-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 .brand-mark {
@@ -89,6 +111,32 @@
   font-weight: 600;
 }
 
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #1e293b;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.7rem;
+}
+
+.nav-link:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.nav-link.router-link-active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e3a8a;
+}
+
 .site-main {
   width: min(1100px, calc(100% - 2.5rem));
   margin: 2rem auto;
@@ -110,6 +158,11 @@
 }
 
 @media (max-width: 640px) {
+  .header-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .brand-name {
     font-size: 1.15rem;
   }
