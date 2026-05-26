@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { featureStatusLabel, features } from '../data/features';
+import { featureStatusLabel, features } from '../../data/features';
 
 defineOptions({
   name: 'FeaturesPage',

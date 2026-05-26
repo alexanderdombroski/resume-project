@@ -4,10 +4,20 @@
       <p class="eyebrow">Feature Detail</p>
       <h1>{{ feature.title }}</h1>
       <p class="summary">{{ feature.summary }}</p>
-      <span class="status" :class="`status-${feature.status}`">
-        {{ featureStatusLabel(feature.status) }}
-      </span>
+      <div class="badges">
+        <span class="status" :class="`status-${feature.status}`">
+          {{ featureStatusLabel(feature.status) }}
+        </span>
+        <span class="access" :class="`access-${feature.access}`">
+          {{ featureAccessLabel(feature.access) }}
+        </span>
+      </div>
     </header>
+
+    <section class="detail-body">
+      <h2>What It Will Do</h2>
+      <p v-for="paragraph in feature.explanation" :key="paragraph">{{ paragraph }}</p>
+    </section>
 
     <section class="detail-body">
       <h2>Details</h2>
@@ -16,17 +26,29 @@
       </ul>
     </section>
 
-    <NuxtLink to="/features" class="back-link">Back to all features</NuxtLink>
+    <nav class="feature-nav" aria-label="Feature navigation">
+      <NuxtLink v-if="previousFeature" :to="`/features/${previousFeature.slug}`" class="nav-btn">
+        Previous: {{ previousFeature.title }}
+      </NuxtLink>
+      <span v-else class="nav-btn nav-btn-muted">Previous: None</span>
+
+      <NuxtLink to="/features" class="back-btn">Back to Feature List</NuxtLink>
+
+      <NuxtLink v-if="nextFeature" :to="`/features/${nextFeature.slug}`" class="nav-btn nav-btn-next">
+        Next: {{ nextFeature.title }}
+      </NuxtLink>
+      <span v-else class="nav-btn nav-btn-muted">Next: None</span>
+    </nav>
   </section>
 
   <section v-else class="feature-detail">
     <p>Feature not found.</p>
-    <NuxtLink to="/features" class="back-link">Back to all features</NuxtLink>
+    <NuxtLink to="/features" class="back-btn">Back to Feature List</NuxtLink>
   </section>
 </template>
 
 <script setup lang="ts">
-import { featureStatusLabel, getFeatureBySlug } from '../../data/features';
+import { featureAccessLabel, featureStatusLabel, features, getFeatureBySlug } from '../../data/features';
 
 defineOptions({
   name: 'FeatureDetailPage',
@@ -35,6 +57,15 @@ defineOptions({
 const route = useRoute();
 const slug = computed(() => String(route.params.slug || ''));
 const feature = computed(() => getFeatureBySlug(slug.value));
+const featureIndex = computed(() => features.findIndex((item) => item.slug === slug.value));
+const previousFeature = computed(() => {
+  if (featureIndex.value <= 0) return null;
+  return features[featureIndex.value - 1];
+});
+const nextFeature = computed(() => {
+  if (featureIndex.value < 0 || featureIndex.value >= features.length - 1) return null;
+  return features[featureIndex.value + 1];
+});
 </script>
 
 <style scoped>
@@ -69,6 +100,13 @@ h1 {
   color: #334155;
 }
 
+.badges {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .detail-body {
   background: #fff;
   border: 1px solid #dbeafe;
@@ -90,7 +128,17 @@ h1 {
 }
 
 .status {
-  margin-top: 0.75rem;
+  width: fit-content;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  display: inline-flex;
+}
+
+.access {
   width: fit-content;
   font-size: 0.75rem;
   font-weight: 700;
@@ -116,13 +164,72 @@ h1 {
   color: #5b21b6;
 }
 
-.back-link {
+.access-free {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.access-paid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.back-btn {
+  width: fit-content;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
   color: #1d4ed8;
   text-decoration: none;
   font-weight: 600;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.75rem;
 }
 
-.back-link:hover {
-  text-decoration: underline;
+.back-btn:hover {
+  background: #dbeafe;
+}
+
+.feature-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.nav-btn {
+  text-decoration: none;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1e293b;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  justify-self: start;
+  width: fit-content;
+}
+
+.nav-btn:hover {
+  background: #f8fafc;
+}
+
+.nav-btn-next {
+  justify-self: end;
+}
+
+.nav-btn-muted {
+  color: #94a3b8;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+  .feature-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-btn-next {
+    justify-self: start;
+  }
 }
 </style>
