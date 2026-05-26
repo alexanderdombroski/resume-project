@@ -35,11 +35,19 @@
           </ul>
         </div>
 
-        <NuxtLink class="btn btn-choose" :to="`/editor?template=${templateOption.slug}`">
-          Choose Template
-        </NuxtLink>
+        <button
+          type="button"
+          class="btn btn-choose"
+          :disabled="creatingTemplate === templateOption.slug"
+          @click="createFromTemplate(templateOption.slug)"
+        >
+          {{
+            creatingTemplate === templateOption.slug ? 'Creating Resume...' : 'Use Resume Template'
+          }}
+        </button>
       </li>
     </ul>
+    <p v-if="createError" class="status error">{{ createError }}</p>
   </section>
 </template>
 
@@ -49,6 +57,27 @@ import { templateOptions } from '../data/templates';
 defineOptions({
   name: 'ResumeTemplatesPage',
 });
+
+const creatingTemplate = ref<string | null>(null);
+const createError = ref('');
+
+async function createFromTemplate(template: string) {
+  creatingTemplate.value = template;
+  createError.value = '';
+
+  try {
+    const response = await $fetch<{ id: number }>('/api/resumes', {
+      method: 'POST',
+      body: { template },
+    });
+
+    await navigateTo(`/editor?resumeId=${response.id}`);
+  } catch {
+    createError.value = 'Could not create resume from template. Please try again.';
+  } finally {
+    creatingTemplate.value = null;
+  }
+}
 </script>
 
 <style scoped>
@@ -139,17 +168,31 @@ h1 {
 }
 
 .btn-choose {
-  display: inline-flex;
+  display: inline-block;
   width: fit-content;
-  text-decoration: none;
   background: #1d4ed8;
   border-color: #1d4ed8;
   color: #fff;
+  cursor: pointer;
 }
 
 .btn-choose:hover {
   background: #1e40af;
   border-color: #1e40af;
+}
+
+.btn-choose:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.status {
+  margin: 0;
+  color: #334155;
+}
+
+.status.error {
+  color: #b91c1c;
 }
 
 @media (max-width: 900px) {
