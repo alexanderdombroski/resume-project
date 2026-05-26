@@ -85,13 +85,22 @@ const resumeId = computed(() => {
   return Number.isInteger(parsed) ? parsed : null;
 });
 
-const apiPath = computed(() => (resumeId.value ? `/api/resumes/${resumeId.value}` : null));
+const { data, pending, error } = await useAsyncData<ResumeDetail | null>(
+  'print-resume',
+  async () => {
+    if (!resumeId.value) {
+      return null;
+    }
 
-const { data, pending, error } = await useFetch<ResumeDetail | null>(apiPath, {
-  server: false,
-  immediate: true,
-  default: () => null,
-});
+    return await $fetch<ResumeDetail>(`/api/resumes/${resumeId.value}`);
+  },
+  {
+    server: false,
+    immediate: true,
+    watch: [resumeId],
+    default: () => null,
+  }
+);
 
 const resume = computed(() => data.value);
 
