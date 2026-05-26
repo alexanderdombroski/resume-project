@@ -1,3 +1,5 @@
+import { features } from './app/data/features';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -26,6 +28,9 @@ export default defineNuxtConfig({
     '/api/**': { prerender: false },
   },
   nitro: {
+    prerender: {
+      routes: features.map((feature) => `/features/${feature.slug}`),
+    },
     vercel: {
       config: {},
     },

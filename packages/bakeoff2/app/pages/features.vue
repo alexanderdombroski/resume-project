@@ -2,65 +2,33 @@
   <section class="features-page">
     <header class="features-header">
       <p class="eyebrow">Product Features</p>
-      <h1>Everything you need to ship better resumes.</h1>
+      <h1>Feature Roadmap</h1>
       <p>
-        Endless Resume combines guided editing, version control, and export tools
-        so you can move faster for every job application.
+        Browse all planned features. Click a feature to view details and current
+        delivery status.
       </p>
     </header>
 
     <ul class="features-grid">
       <li v-for="feature in features" :key="feature.title" class="feature-card">
-        <h2>{{ feature.title }}</h2>
-        <p>{{ feature.description }}</p>
+        <NuxtLink :to="`/features/${feature.slug}`" class="feature-link">
+          <h2>{{ feature.title }}</h2>
+          <p>{{ feature.summary }}</p>
+          <span class="status" :class="`status-${feature.status}`">
+            {{ featureStatusLabel(feature.status) }}
+          </span>
+        </NuxtLink>
       </li>
     </ul>
   </section>
 </template>
 
 <script setup lang="ts">
+import { featureStatusLabel, features } from '../data/features';
+
 defineOptions({
   name: 'FeaturesPage',
 });
-
-const features = [
-  {
-    title: 'Focused Editing',
-    description: 'Edit each resume section with a clean workspace optimized for speed and clarity.',
-  },
-  {
-    title: 'Version Duplication',
-    description: 'Clone an existing resume and quickly tailor it to a specific role or industry.',
-  },
-  {
-    title: 'Impact Bullet Guidance',
-    description: 'Structure achievements with stronger action and measurable outcomes.',
-  },
-  {
-    title: 'Live Save Workflow',
-    description: 'Keep updates current while you iterate and refine your resume content.',
-  },
-  {
-    title: 'Recruiter-Friendly Output',
-    description: 'Produce clean, readable formatting designed for both people and hiring workflows.',
-  },
-  {
-    title: 'Collection Dashboard',
-    description: 'Manage all resumes from one dashboard with quick access to edit and delete actions.',
-  },
-  {
-    title: 'Fast Loading UI',
-    description: 'Navigate quickly through a lightweight interface that stays responsive as you work.',
-  },
-  {
-    title: 'Simple Data Model',
-    description: 'Keep titles, summaries, and revision timestamps organized in a straightforward format.',
-  },
-  {
-    title: 'Scalable Foundation',
-    description: 'Built with Nuxt so you can extend into templates, authentication, and richer exports.',
-  },
-];
 </script>
 
 <style scoped>
@@ -111,11 +79,24 @@ h1 {
   background: #fff;
   border: 1px solid #dbeafe;
   border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+.feature-link {
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+  gap: 0.6rem;
   padding: 1rem;
+  height: 100%;
+}
+
+.feature-link:hover {
+  background: #f8fafc;
 }
 
 .feature-card h2 {
-  margin: 0 0 0.45rem;
+  margin: 0;
   font-size: 1.03rem;
 }
 
@@ -123,6 +104,31 @@ h1 {
   margin: 0;
   line-height: 1.45;
   color: #334155;
+}
+
+.status {
+  width: fit-content;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+.status-in-development {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.status-coming-soon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-far-future {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
 @media (max-width: 1000px) {
