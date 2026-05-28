@@ -7,6 +7,14 @@
       <button type="button" class="btn" :disabled="isSaving || !resume" @click="saveResume">
         {{ isSaving ? 'Saving...' : 'Save Resume' }}
       </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="isSaving || !resume"
+        @click="saveAndPrint"
+      >
+        {{ isSaving ? 'Saving...' : 'Print' }}
+      </button>
       <p v-if="saveError" class="status error">Could not save resume.</p>
     </div>
 
@@ -186,11 +194,26 @@ async function saveResume() {
       body: data.value,
     });
     lastSavedSnapshot.value = cloneResume(data.value);
+    return true;
   } catch {
     saveError.value = true;
+    return false;
   } finally {
     isSaving.value = false;
   }
+}
+
+async function saveAndPrint() {
+  if (!hasUnsavedChanges.value) {
+    if (!resumeId.value) return;
+    await navigateTo(`/print?resumeId=${resumeId.value}&from=editor`);
+    return;
+  }
+
+  const saved = await saveResume();
+  if (!saved || !resumeId.value) return;
+
+  await navigateTo(`/print?resumeId=${resumeId.value}&from=editor`);
 }
 
 function onResumeTitleUpdate(title: string) {
@@ -378,6 +401,10 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 
 .btn:hover {
   border-color: #94a3b8;
+}
+
+.btn-primary {
+  border-color: #1d4ed8;
 }
 
 .btn:disabled {

@@ -1,7 +1,7 @@
 <template>
   <section class="print-page">
     <div class="print-actions">
-      <NuxtLink class="btn" to="/dashboard">Back</NuxtLink>
+      <NuxtLink class="btn" :to="backLink">Back</NuxtLink>
       <button type="button" class="btn btn-primary" @click="printResume">Print</button>
     </div>
 
@@ -83,6 +83,17 @@ const resumeId = computed(() => {
   const raw = route.query.resumeId;
   const parsed = Number(Array.isArray(raw) ? raw[0] : raw);
   return Number.isInteger(parsed) ? parsed : null;
+});
+
+const backLink = computed(() => {
+  const rawFrom = route.query.from;
+  const source = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
+
+  if (source === 'editor' && resumeId.value) {
+    return `/editor?resumeId=${resumeId.value}`;
+  }
+
+  return '/dashboard';
 });
 
 const { data, pending, error } = await useAsyncData<ResumeDetail | null>(
