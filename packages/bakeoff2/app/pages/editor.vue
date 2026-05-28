@@ -35,12 +35,23 @@
 
     <div v-if="resume" class="sections">
       <article v-for="section in resume.sections" :key="section.id" class="section-card">
-        <h2>
-          <EditableInlineText
-            :model-value="section.title"
-            @update:model-value="onSectionTitleUpdate(section.id, $event)"
-          />
-        </h2>
+        <div class="section-header">
+          <h2>
+            <EditableInlineText
+              :model-value="section.title"
+              @update:model-value="onSectionTitleUpdate(section.id, $event)"
+            />
+          </h2>
+          <button
+            type="button"
+            class="btn btn-danger btn-icon"
+            aria-label="Remove section"
+            title="Remove section"
+            @click="removeSection(section.id)"
+          >
+            x
+          </button>
+        </div>
 
         <ul v-if="section.items.length" class="item-list">
           <li v-for="item in section.items" :key="item.id">
@@ -275,6 +286,19 @@ function onBulletRemove(sectionId: number, payload: { id: number }) {
   };
 }
 
+function removeSection(sectionId: number) {
+  if (!data.value) return;
+
+  const remainingSections = data.value.sections
+    .filter((section) => section.id !== sectionId)
+    .map((section, index) => ({ ...section, item_order: index + 1 }));
+
+  data.value = {
+    ...data.value,
+    sections: remainingSections,
+  };
+}
+
 function onSectionTitleUpdate(sectionId: number, title: string) {
   if (!data.value) return;
 
@@ -389,6 +413,31 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
   margin-top: 0.5rem;
 }
 
+.btn-danger {
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+}
+
+.btn-danger:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.btn-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  min-width: 1.7rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1rem;
+  font-weight: 800;
+  flex: none;
+}
+
 .editor-header {
   padding: 1.2rem;
   border: 1px solid #dbeafe;
@@ -440,8 +489,16 @@ h1 {
   padding: 1rem;
 }
 
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
 .section-card h2 {
-  margin: 0 0 0.6rem;
+  margin: 0;
   font-size: 1.1rem;
 }
 
