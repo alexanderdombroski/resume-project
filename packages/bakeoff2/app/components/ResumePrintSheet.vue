@@ -4,12 +4,18 @@
       <div class="print-actions">
         <NuxtLink class="btn" :to="backLink">Back</NuxtLink>
         <button type="button" class="btn btn-primary" @click="printResume">Print</button>
-        <p class="print-total">Total: {{ formatInches(totalMeasuredHeightInches) }}</p>
+        <p class="print-total" :class="{ 'print-total--warning': isWarningRange }">
+          {{ totalLabel }}
+        </p>
       </div>
     </template>
 
-    <p v-else class="print-total print-total--compact">
-      Total: {{ formatInches(totalMeasuredHeightInches) }}
+    <p
+      v-else
+      class="print-total print-total--compact"
+      :class="{ 'print-total--warning': isWarningRange }"
+    >
+      {{ totalLabel }}
     </p>
 
     <div
@@ -209,6 +215,16 @@ const totalMeasuredHeightInches = computed(() => {
   return totalPx / PX_PER_INCH;
 });
 
+const isWarningRange = computed(
+  () => totalMeasuredHeightInches.value > 10 && totalMeasuredHeightInches.value <= 13
+);
+
+const totalLabel = computed(() =>
+  isWarningRange.value
+    ? `>10 inches: two pages (${formatInches(totalMeasuredHeightInches.value)})`
+    : `Total: ${formatInches(totalMeasuredHeightInches.value)}`
+);
+
 function updateContentWidth() {
   const el = resumeSheetRef.value;
   if (!el) {
@@ -285,6 +301,10 @@ onBeforeUnmount(() => {
   font-size: 0.9rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.print-total--warning {
+  color: #b91c1c;
 }
 
 .print-total--compact {
