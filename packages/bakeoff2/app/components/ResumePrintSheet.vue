@@ -371,7 +371,7 @@ h2 {
 
 @media print {
   @page {
-    margin: 12mm;
+    margin: 0.5in;
     size: auto;
 
     @top-center {
