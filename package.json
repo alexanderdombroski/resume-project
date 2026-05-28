@@ -24,5 +24,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.7"
   }
 }
