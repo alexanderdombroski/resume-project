@@ -94,6 +94,7 @@
 
         <EditableBulletList
           :bullets="section.bullet_points"
+          :focus-bullet-id="focusedBulletId"
           @update="onBulletUpdate(section.id, $event)"
           @remove="onBulletRemove(section.id, $event)"
         />
@@ -176,6 +177,7 @@ const resume = computed(() => data.value);
 const isSaving = ref(false);
 const saveError = ref(false);
 const lastSavedSnapshot = ref<ResumeDetail | null>(null);
+const focusedBulletId = ref<number | null>(null);
 
 function cloneResume(value: ResumeDetail) {
   return typeof structuredClone === 'function'
@@ -293,6 +295,8 @@ function addBulletPoint(sectionId: number) {
       };
     }),
   };
+
+  focusedBulletId.value = nextTempId;
 }
 
 function onBulletRemove(sectionId: number, payload: { id: number }) {

@@ -50,9 +50,15 @@ type BulletPoint = {
   content: string;
 };
 
-defineProps<{
-  bullets: BulletPoint[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    bullets: BulletPoint[];
+    focusBulletId?: number | null;
+  }>(),
+  {
+    focusBulletId: null,
+  }
+);
 
 const emit = defineEmits<{
   update: [payload: { id: number; content: string }];
@@ -62,6 +68,7 @@ const emit = defineEmits<{
 const editingId = ref<number | null>(null);
 const draft = ref('');
 const inputRefs = new Map<number, HTMLInputElement>();
+const lastAutoFocusedBulletId = ref<number | null>(null);
 
 function setInputRef(el: Element | null, id: number) {
   if (el instanceof HTMLInputElement) {
@@ -80,6 +87,20 @@ function startEditing(id: number, content: string) {
     inputRefs.get(id)?.select();
   });
 }
+
+watch(
+  () => [props.focusBulletId, props.bullets] as const,
+  ([focusBulletId, bullets]) => {
+    if (focusBulletId == null || focusBulletId === lastAutoFocusedBulletId.value) return;
+
+    const bullet = bullets.find((entry) => entry.id === focusBulletId);
+    if (!bullet) return;
+
+    lastAutoFocusedBulletId.value = focusBulletId;
+    startEditing(bullet.id, bullet.content);
+  },
+  { immediate: true }
+);
 
 function saveEdit(id: number) {
   const content = draft.value.trim();
