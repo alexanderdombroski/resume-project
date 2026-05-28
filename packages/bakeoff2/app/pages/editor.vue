@@ -15,13 +15,11 @@
       >
         {{ isSaving ? 'Saving...' : 'Print' }}
       </button>
-      <ResumePrintSheet
-        v-if="resume"
-        :resume="resume"
-        mode="indicator"
-        class="editor-size-indicator"
-      />
       <p v-if="saveError" class="status error">Could not save resume.</p>
+    </div>
+
+    <div v-if="resume" class="editor-size-indicator">
+      <ResumePrintSheet :resume="resume" mode="indicator" />
     </div>
 
     <header class="editor-header">
@@ -443,7 +441,8 @@ function onSubsectionDescriptionUpdate(sectionId: number, itemId: number, descri
 }
 
 .editor-size-indicator {
-  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn-add-bullet {
