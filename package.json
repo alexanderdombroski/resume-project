@@ -9,7 +9,7 @@
     "packages/**"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace packages/bakeoff2",
+    "dev": "npm run dev --workspace packages/bakeoff3",
     "lint": "eslint .",
     "prepare": "node .husky/prepare.ts"
   },
@@ -24,8 +24,5 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "typescript-eslint": "^8.60.0"
-  },
-  "dependencies": {
-    "@chenglou/pretext": "^0.0.7"
   }
 }
