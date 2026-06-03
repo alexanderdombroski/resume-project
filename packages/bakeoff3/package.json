@@ -13,6 +13,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@astrojs/netlify": "^7.0.12",
     "solid-js": "^1.9.13"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "astro": "^6.4.3",
     "eslint-plugin-astro": "^1.7.0",
     "eslint-plugin-solid": "^0.14.5",
+    "netlify-cli": "^26.1.0",
     "typescript-eslint": "^8.60.1"
   }
 }
