@@ -18,7 +18,7 @@ This is a monorepo of several prototypes in different stacks.
 
 1. https://bakeoff1.alexdombroski.workers.dev/
 2. https://bakeoff2.vercel.app/
-3. _bakeoff3.com_
+3. https://bakeoff-3.netlify.app/
 
 Read the readme to get started with each
 
