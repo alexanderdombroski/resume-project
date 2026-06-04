@@ -1,19 +1,68 @@
 ---
 import Layout from '../components/layout/Layout.astro';
-import Counter from '../components/counter.tsx';
+import Hero from '../components/Hero.astro';
 ---
 
 <Layout title="Endless Resume" subtitle="Resume Editor">
   <main class="landing">
-    <Counter client:load />
+    <Hero />
+    <section class="supporting" id="how-it-works">
+      <div class="supporting-card" id="start">
+        <p class="section-label">How it works</p>
+        <h2>Write the core resume once, then swap in the details that matter for each role.</h2>
+        <p>
+          Endless Resume keeps the master version clean and lets you tailor experience, bullets, and
+          keywords for every application without rebuilding the document.
+        </p>
+      </div>
+    </section>
   </main>
 </Layout>
 
 <style>
   .landing {
     display: grid;
-    place-items: center;
-    min-height: calc(100vh - 9rem);
-    padding: 2rem 0;
+    gap: clamp(2rem, 4vw, 4rem);
+    padding: 0.5rem 0 2rem;
+  }
+
+  .supporting {
+    padding: 0 0 1rem;
+  }
+
+  .supporting-card {
+    max-width: 52rem;
+    padding: clamp(1.35rem, 3vw, 2rem);
+    border-radius: 1.5rem;
+    background: rgb(255 255 255 / 0.72);
+    border: 1px solid rgb(148 163 184 / 0.18);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 0.08);
+    backdrop-filter: blur(14px);
+  }
+
+  .section-label {
+    margin: 0 0 0.8rem;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .supporting-card h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(1.45rem, 3vw, 2.2rem);
+    line-height: 1.08;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+  }
+
+  .supporting-card p {
+    margin: 1rem 0 0;
+    max-width: 46rem;
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.7;
   }
 </style>
