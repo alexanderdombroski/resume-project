@@ -2,6 +2,7 @@ import { defineConfig } from 'eslint/config';
 import eslintPluginAstro from 'eslint-plugin-astro';
 import eslintPluginSolid from 'eslint-plugin-solid/configs/typescript';
 import ts from 'typescript-eslint';
+import globals from 'globals';
 
 /**
  * @type {import("eslint").ESLint.Plugin}
@@ -73,6 +74,13 @@ export default defineConfig([
     ...eslintPluginSolid,
     languageOptions: {
       parser: ts.parser,
+    },
+  },
+  {
+    files: ['**/scripts/**/*.ts'],
+
+    languageOptions: {
+      globals: globals.node,
     },
   },
   {
