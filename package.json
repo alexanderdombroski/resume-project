@@ -25,5 +25,8 @@
     "lint-staged": "^17.0.5",
     "prettier-plugin-astro": "^0.14.1",
     "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "@clerk/astro": "^3.3.3"
   }
 }

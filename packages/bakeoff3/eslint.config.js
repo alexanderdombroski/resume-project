@@ -77,7 +77,12 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/scripts/**/*.ts', '**/utils/**/*.ts'],
+    files: [
+      '**/scripts/**/*.ts',
+      '**/utils/**/*.ts',
+      'src/pages/api/**/*.ts',
+      'src/middleware/index.ts',
+    ],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
