@@ -12,9 +12,13 @@ PRAGMA foreign_keys = ON;
 -- APP_USER
 -- =========================
 CREATE TABLE IF NOT EXISTS app_user (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL
+    clerk_user_id TEXT PRIMARY KEY,
+    email TEXT UNIQUE,
+    first_name TEXT,
+    last_name TEXT,
+    image_url TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================
@@ -22,17 +26,20 @@ CREATE TABLE IF NOT EXISTS app_user (
 -- =========================
 CREATE TABLE IF NOT EXISTS resume (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    clerk_user_id TEXT NOT NULL,
     title TEXT NOT NULL,
     summary TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_resume_user
-        FOREIGN KEY (user_id)
-        REFERENCES app_user(id)
+        FOREIGN KEY (clerk_user_id)
+        REFERENCES app_user(clerk_user_id)
         ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_resume_clerk_user_id
+    ON resume(clerk_user_id);
 
 -- =========================
 -- SECTION
@@ -86,17 +93,17 @@ CREATE TABLE IF NOT EXISTS section_item (
 );
 
 -- ==================================================
--- MOCK DATA - RESUMES (user_id = 1)
+-- MOCK DATA - RESUMES (clerk_user_id = 'user_mock_clerk_001')
 -- ==================================================
 
-INSERT INTO app_user (id, email, password_hash)
-VALUES (1, 'testperson@example.com', 'test_hash');
+INSERT INTO app_user (clerk_user_id, email, first_name, last_name, image_url)
+VALUES ('user_mock_clerk_001', 'testperson@example.com', 'Test', 'Person', NULL);
 
-INSERT INTO resume (id, user_id, title, summary)
+INSERT INTO resume (id, clerk_user_id, title, summary)
 VALUES
-    (1, 1, 'Software Engineer Resume', 'Backend-focused engineer with experience in distributed systems, APIs, and cloud infrastructure.'),
-    (2, 1, 'Full Stack Product Engineer Resume', 'Product-minded full stack developer with strong UX instincts and data-informed delivery.'),
-    (3, 1, 'Data Engineer Resume', 'Data engineer specializing in analytics pipelines, orchestration, and warehouse modeling.');
+    (1, 'user_mock_clerk_001', 'Software Engineer Resume', 'Backend-focused engineer with experience in distributed systems, APIs, and cloud infrastructure.'),
+    (2, 'user_mock_clerk_001', 'Full Stack Product Engineer Resume', 'Product-minded full stack developer with strong UX instincts and data-informed delivery.'),
+    (3, 'user_mock_clerk_001', 'Data Engineer Resume', 'Data engineer specializing in analytics pipelines, orchestration, and warehouse modeling.');
 
 INSERT INTO section (id, resume_id, title, item_order, type)
 VALUES
