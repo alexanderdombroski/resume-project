@@ -1,21 +1,16 @@
+import { TURSO_AUTH_TOKEN, TURSO_DATABASE_URL } from 'astro:env/server';
 import { createClient } from '@tursodatabase/serverless/compat';
 
-export function resolveDatabaseUrl() {
-  return process.env.TURSO_DATABASE_URL;
-}
-
 export function createDbClient() {
-  const databaseUrl = resolveDatabaseUrl();
-  if (!databaseUrl) {
+  if (!TURSO_DATABASE_URL) {
     throw new Error('Missing required env var: TURSO_DATABASE_URL');
   }
 
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  if (!authToken) {
+  if (!TURSO_AUTH_TOKEN) {
     throw new Error('Missing required env var: TURSO_AUTH_TOKEN');
   }
 
-  return createClient({ url: databaseUrl, authToken });
+  return createClient({ url: TURSO_DATABASE_URL, authToken: TURSO_AUTH_TOKEN });
 }
 
 export function splitSqlStatements(input: string) {

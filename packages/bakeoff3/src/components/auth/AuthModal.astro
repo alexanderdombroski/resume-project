@@ -56,16 +56,34 @@ import { Show, SignIn, UserButton } from '@clerk/astro/components';
   const dialog = document.querySelector('[data-auth-dialog]');
   const openButton = document.querySelector('[data-auth-open]');
   const closeButton = document.querySelector('[data-auth-close]');
+  const shouldOpenAuth = new URLSearchParams(window.location.search).get('auth') === 'sign-in';
+
+  const openDialog = () => {
+    if (dialog instanceof HTMLDialogElement && !dialog.open) {
+      dialog.showModal();
+    }
+  };
+
+  const clearAuthParam = () => {
+    if (!shouldOpenAuth) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auth');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  };
 
   if (dialog instanceof HTMLDialogElement && openButton instanceof HTMLButtonElement) {
     openButton.addEventListener('click', () => {
-      dialog.showModal();
+      openDialog();
     });
   }
 
   if (dialog instanceof HTMLDialogElement && closeButton instanceof HTMLButtonElement) {
     closeButton.addEventListener('click', () => {
       dialog.close();
+      clearAuthParam();
     });
   }
 
@@ -75,6 +93,12 @@ import { Show, SignIn, UserButton } from '@clerk/astro/components';
         dialog.close();
       }
     });
+
+    dialog.addEventListener('close', clearAuthParam);
+  }
+
+  if (shouldOpenAuth) {
+    openDialog();
   }
 </script>
 

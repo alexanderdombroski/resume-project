@@ -1,21 +1,59 @@
 ---
 import Layout from '../components/layout/Layout.astro';
+import { getResumesForUser } from '../utils/resume';
+
+const { isAuthenticated, userId } = Astro.locals.auth();
+
+if (!isAuthenticated || !userId) {
+  return Response.redirect(new URL('/?auth=sign-in', Astro.url), 302);
+}
+
+const resumes = await getResumesForUser(userId);
 ---
 
 <Layout title="Dashboard - Endless Resume" subtitle="Workspace">
   <section class="dashboard">
     <section class="dashboard-card" aria-labelledby="dashboard-title">
       <p class="section-label">Protected workspace</p>
-      <h1 id="dashboard-title">Resume dashboard</h1>
+      <h1 id="dashboard-title">Your resumes</h1>
       <p>
-        This route is protected by Clerk middleware. Signed-in users land here after they
-        authenticate from the modal or the dedicated sign-in page.
+        These are the resumes attached to the signed-in Clerk user. Use the modal in the nav to sign
+        in or register, then come back here to manage your work.
       </p>
 
-      <div class="actions">
-        <a class="button button-primary" href="/">Back home</a>
-        <a class="button button-secondary" href="/sign-in">Open sign-in</a>
-      </div>
+      {
+        resumes.length > 0 ? (
+          <ul class="resume-list" aria-label="Your resumes">
+            {resumes.map((resume) => (
+              <li class="resume-item">
+                <div class="resume-copy">
+                  <p class="resume-kicker">Resume #{resume.id}</p>
+                  <h2>{resume.title}</h2>
+                  <p>{resume.summary ?? 'No summary added yet.'}</p>
+                </div>
+
+                <div class="resume-meta">
+                  <span>Created {new Date(resume.createdAt).toLocaleDateString()}</span>
+                  <span>Updated {new Date(resume.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="empty-state">
+            <h2>No resumes yet</h2>
+            <p>
+              Create the first resume record for this user and it will appear here. The dashboard is
+              already wired to the data source, so the next step is a create/edit flow.
+            </p>
+            <div class="actions">
+              <a class="button button-primary" href="/">
+                Back home
+              </a>
+            </div>
+          </div>
+        )
+      }
     </section>
   </section>
 </Layout>
@@ -63,6 +101,71 @@ import Layout from '../components/layout/Layout.astro';
     line-height: 1.7;
   }
 
+  .resume-list {
+    list-style: none;
+    margin: 1.75rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .resume-item {
+    display: grid;
+    gap: 1rem;
+    padding: 1.15rem 1.15rem 1.05rem;
+    border-radius: 1.15rem;
+    background: rgb(255 255 255 / 0.78);
+    border: 1px solid rgb(148 163 184 / 0.16);
+    box-shadow: 0 14px 30px rgb(15 23 42 / 0.05);
+  }
+
+  .resume-copy h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.25rem;
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+  }
+
+  .resume-kicker {
+    margin: 0 0 0.45rem;
+    color: #1d4ed8;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .resume-copy p:last-child {
+    margin: 0.75rem 0 0;
+  }
+
+  .resume-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1rem;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .empty-state {
+    margin-top: 1.75rem;
+    padding: 1.25rem;
+    border-radius: 1.15rem;
+    background: rgb(255 255 255 / 0.68);
+    border: 1px solid rgb(148 163 184 / 0.16);
+  }
+
+  .empty-state h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.15rem;
+  }
+
+  .empty-state p {
+    margin-top: 0.65rem;
+  }
+
   .actions {
     display: flex;
     flex-wrap: wrap;
@@ -85,12 +188,5 @@ import Layout from '../components/layout/Layout.astro';
     color: #ffffff;
     background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
     box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
-  }
-
-  .button-secondary {
-    color: #0f172a;
-    background: rgb(255 255 255 / 0.72);
-    border: 1px solid rgb(148 163 184 / 0.35);
-    backdrop-filter: blur(12px);
   }
 </style>
