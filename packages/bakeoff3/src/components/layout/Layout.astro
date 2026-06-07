@@ -1,4 +1,6 @@
 ---
+import AuthModal from '../auth/AuthModal.astro';
+
 const { title = 'Endless Resume', subtitle = 'Resume Editor' } = Astro.props;
 const pathname = Astro.url.pathname;
 
@@ -40,6 +42,7 @@ const navLinks = [
                 </a>
               ))
             }
+            <AuthModal />
           </nav>
         </div>
       </header>

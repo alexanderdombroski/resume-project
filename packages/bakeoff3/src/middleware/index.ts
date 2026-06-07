@@ -1,12 +1,16 @@
-import { clerkMiddleware } from '@clerk/astro/server';
-import { defineMiddleware } from 'astro:middleware';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
 
-export const onRequest = defineMiddleware((context, next) => {
-  const req = new URL(context.url.pathname);
-  if (context.isPrerendered || !req.pathname.startsWith('/api')) {
-    return next();
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']);
+
+export const onRequest = clerkMiddleware(
+  {
+    signInUrl: '/sign-in',
+  },
+  (auth, context) => {
+    const { isAuthenticated, redirectToSignIn } = auth();
+
+    if (isProtectedRoute(context.request) && !isAuthenticated) {
+      return redirectToSignIn();
+    }
   }
-
-  const res = clerkMiddleware();
-  return res(context, next);
-});
+);

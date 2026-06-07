@@ -2,4 +2,95 @@
 import Layout from '../components/layout/Layout.astro';
 ---
 
-<Layout title="Dashboard - Endless Resume" subtitle="Workspace" />
+<Layout title="Dashboard - Endless Resume" subtitle="Workspace">
+  <section class="dashboard">
+    <section class="dashboard-card" aria-labelledby="dashboard-title">
+      <p class="section-label">Protected workspace</p>
+      <h1 id="dashboard-title">Resume dashboard</h1>
+      <p>
+        This route is protected by Clerk middleware. Signed-in users land here after they
+        authenticate from the modal or the dedicated sign-in page.
+      </p>
+
+      <div class="actions">
+        <a class="button button-primary" href="/">Back home</a>
+        <a class="button button-secondary" href="/sign-in">Open sign-in</a>
+      </div>
+    </section>
+  </section>
+</Layout>
+
+<style>
+  .dashboard {
+    display: grid;
+    place-items: center;
+    min-height: calc(100vh - 12rem);
+    padding: 1.5rem 0 2.5rem;
+  }
+
+  .dashboard-card {
+    width: min(50rem, 100%);
+    padding: clamp(1.35rem, 3vw, 2rem);
+    border-radius: 1.5rem;
+    background: rgb(255 255 255 / 0.72);
+    border: 1px solid rgb(148 163 184 / 0.18);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 0.08);
+    backdrop-filter: blur(14px);
+  }
+
+  .section-label {
+    margin: 0 0 0.8rem;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-card h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(2rem, 4vw, 3.1rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .dashboard-card p {
+    margin: 1rem 0 0;
+    max-width: 46rem;
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 1.7rem;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.15rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .button-primary {
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
+    box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
+  }
+
+  .button-secondary {
+    color: #0f172a;
+    background: rgb(255 255 255 / 0.72);
+    border: 1px solid rgb(148 163 184 / 0.35);
+    backdrop-filter: blur(12px);
+  }
+</style>
