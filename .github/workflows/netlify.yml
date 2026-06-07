@@ -29,7 +29,7 @@ jobs:
       - name: Build
         run: npm run build --workspace=${{ env.PACKAGE_PATH }}
       - name: Deploy
-        run: npx netlify deploy --prod --no-build --dir "./packages/bakeoff3/dist"
+        run: npx netlify deploy --prod --no-build --dir "./packages/bakeoff3/dist" --site "607dbdde-ceb9-4c6a-8b31-13c9b7f4cb2a"
         working-directory: ${{ env.PACKAGE_PATH }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
