@@ -28,6 +28,11 @@ jobs:
         run: npm ci --workspace=${{ env.PACKAGE_PATH }}
       - name: Build
         run: npm run build --workspace=${{ env.PACKAGE_PATH }}
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       - name: Deploy
         run: npx netlify deploy --prod --no-build --dir "./packages/bakeoff3/dist" --site "607dbdde-ceb9-4c6a-8b31-13c9b7f4cb2a"
         working-directory: ${{ env.PACKAGE_PATH }}

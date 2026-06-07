@@ -10,8 +10,10 @@ import netlify from '@astrojs/netlify';
 export default defineConfig({
   env: {
     schema: {
-      TURSO_DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
-      TURSO_AUTH_TOKEN: envField.string({ context: 'server', access: 'secret' }),
+      TURSO_DATABASE_URL: envField.string({ context: 'server', access: 'public' }),
+      TURSO_AUTH_TOKEN: envField.string({ context: 'server', access: 'public' }),
+      PUBLIC_CLERK_PUBLISHABLE_KEY: envField.string({ context: 'client', access: 'public' }),
+      CLERK_SECRET_KEY: envField.string({ context: 'server', access: 'public' }),
     },
   },
   integrations: [clerk(), solidJs()],
