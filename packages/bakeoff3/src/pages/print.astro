@@ -1,0 +1,492 @@
+---
+import Layout from '../components/layout/Layout.astro';
+---
+
+<Layout title="Print Resume - Endless Resume" subtitle="Print">
+  <div class="print-container">
+    <div class="toolbar" id="toolbar">
+      <a href="/dashboard" id="back-btn" class="button button-secondary">Back to Dashboard</a>
+      <button type="button" id="print-btn" class="button button-primary">Print Resume</button>
+    </div>
+
+    <div class="status-message" id="status-message">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Loading resume details...</p>
+    </div>
+
+    <article class="resume-sheet" id="resume-sheet" style="display: none;">
+      <header class="resume-header">
+        <h1 id="resume-title"></h1>
+        <p class="resume-summary" id="resume-summary"></p>
+      </header>
+
+      <div id="resume-sections" class="resume-sections">
+        <!-- Dynamic sections will be inserted here -->
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<script>
+  // Helper to format dates
+  function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  function formatDateRange(startDate: string | null, endDate: string | null): string {
+    const start = startDate ? formatDate(startDate.trim()) : '';
+    const end = endDate ? formatDate(endDate.trim()) : 'Present';
+
+    if (start && end) return `${start} — ${end}`;
+    return start || endDate || '';
+  }
+
+  // Parse ID from URL search params (supporting both 'id' and 'resumeId')
+  const params = new URLSearchParams(window.location.search);
+  const resumeId = params.get('id') || params.get('resumeId');
+  const fromEditor = params.get('from') === 'editor';
+
+  const backBtn = document.getElementById('back-btn') as HTMLAnchorElement;
+  const printBtn = document.getElementById('print-btn') as HTMLButtonElement;
+  const statusMessage = document.getElementById('status-message')!;
+  const resumeSheet = document.getElementById('resume-sheet')!;
+  const resumeTitle = document.getElementById('resume-title')!;
+  const resumeSummary = document.getElementById('resume-summary')!;
+  const resumeSections = document.getElementById('resume-sections')!;
+
+  // Configure back button target
+  if (fromEditor && resumeId) {
+    backBtn.href = `/editor?id=${resumeId}`;
+    backBtn.textContent = 'Back to Editor';
+  } else {
+    backBtn.href = '/dashboard';
+  }
+
+  // Bind print button action
+  printBtn.addEventListener('click', () => {
+    window.print();
+  });
+
+  async function loadFullResume() {
+    if (!resumeId) {
+      statusMessage.innerHTML =
+        '<p class="error-msg">Error: Missing resume ID in URL query parameters (?id=...).</p>';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/resume/${resumeId}`);
+
+      if (response.status === 401) {
+        window.location.href = '/?auth=sign-in';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to load resume (status: ${response.status})`);
+      }
+
+      const data = await response.json();
+      const resume = data.resume;
+
+      if (!resume) {
+        throw new Error('Resume details not found.');
+      }
+
+      // Populate basic details
+      resumeTitle.textContent = resume.title;
+      if (resume.summary && resume.summary.trim()) {
+        resumeSummary.textContent = resume.summary;
+        resumeSummary.style.display = 'block';
+      } else {
+        resumeSummary.style.display = 'none';
+      }
+
+      // Clear sections
+      resumeSections.innerHTML = '';
+
+      // Populate sections
+      if (resume.sections && resume.sections.length > 0) {
+        resume.sections.forEach((section: any) => {
+          const sectionEl = document.createElement('section');
+          sectionEl.className = 'resume-section';
+
+          const h2 = document.createElement('h2');
+          h2.textContent = section.title;
+          sectionEl.appendChild(h2);
+
+          // Add items
+          if (section.items && section.items.length > 0) {
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'section-items';
+
+            section.items.forEach((item: any) => {
+              const itemEl = document.createElement('div');
+              itemEl.className = 'section-item';
+
+              const headerEl = document.createElement('div');
+              headerEl.className = 'item-header';
+
+              const labelEl = document.createElement('strong');
+              labelEl.className = 'item-label';
+              labelEl.textContent = item.label || '';
+              headerEl.appendChild(labelEl);
+
+              if (item.value) {
+                const valueEl = document.createElement('span');
+                valueEl.className = 'item-value';
+                valueEl.textContent = item.value;
+                headerEl.appendChild(document.createTextNode(' | '));
+                headerEl.appendChild(valueEl);
+              }
+
+              itemEl.appendChild(headerEl);
+
+              // Meta details (dates, location)
+              const dateRange = formatDateRange(item.start_date, item.end_date);
+              if (dateRange || item.location) {
+                const metaEl = document.createElement('div');
+                metaEl.className = 'item-meta';
+
+                if (dateRange) {
+                  const dateEl = document.createElement('span');
+                  dateEl.className = 'item-date';
+                  dateEl.textContent = dateRange;
+                  metaEl.appendChild(dateEl);
+                }
+
+                if (item.location) {
+                  if (dateRange) {
+                    metaEl.appendChild(document.createTextNode(' — '));
+                  }
+                  const locEl = document.createElement('span');
+                  locEl.className = 'item-location';
+                  locEl.textContent = item.location;
+                  metaEl.appendChild(locEl);
+                }
+
+                itemEl.appendChild(metaEl);
+              }
+
+              // Description
+              if (item.description && item.description.trim()) {
+                const descEl = document.createElement('p');
+                descEl.className = 'item-description';
+                descEl.textContent = item.description;
+                itemEl.appendChild(descEl);
+              }
+
+              itemsContainer.appendChild(itemEl);
+            });
+
+            sectionEl.appendChild(itemsContainer);
+          }
+
+          // Add bullets
+          if (section.bullets && section.bullets.length > 0) {
+            const ul = document.createElement('ul');
+            ul.className = 'section-bullets';
+
+            section.bullets.forEach((bullet: any) => {
+              if (bullet.content && bullet.content.trim()) {
+                const li = document.createElement('li');
+                li.textContent = bullet.content;
+                ul.appendChild(li);
+              }
+            });
+
+            sectionEl.appendChild(ul);
+          }
+
+          resumeSections.appendChild(sectionEl);
+        });
+      }
+
+      // Hide loading status and show sheet
+      statusMessage.style.display = 'none';
+      resumeSheet.style.display = 'block';
+
+      // Update document title
+      document.title = `${resume.title} - Print Resume`;
+    } catch (err: any) {
+      console.error(err);
+      statusMessage.innerHTML = `<p class="error-msg">Failed to load resume details: ${err.message || err}</p>`;
+    }
+  }
+
+  loadFullResume();
+</script>
+
+<style>
+  .print-container {
+    max-width: 54rem;
+    margin: 1.5rem auto 3rem;
+    padding: 0 1rem;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .button-primary {
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
+    border: none;
+  }
+
+  .button-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(37, 99, 235, 0.22);
+  }
+
+  .button-secondary {
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+  }
+
+  .button-secondary:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+  }
+
+  /* Status message */
+  .status-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(37, 99, 235, 0.2);
+    border-top-color: #1d4ed8;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  :global(.error-msg) {
+    color: #dc2626;
+    font-weight: 500;
+  }
+
+  /* Resume sheet styling (web view) */
+  .resume-sheet {
+    background: #ffffff;
+    color: #1e293b;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.08);
+    padding: 3rem 4rem;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif;
+    line-height: 1.5;
+  }
+
+  .resume-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 1.25rem;
+  }
+
+  .resume-header h1 {
+    font-size: 2.25rem;
+    color: #0f172a;
+    margin: 0 0 0.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .resume-summary {
+    color: #475569;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .resume-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  :global(.resume-section h2) {
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 0.25rem;
+    margin: 0 0 0.75rem;
+    font-weight: 700;
+  }
+
+  :global(.section-items) {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  :global(.section-item) {
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.item-header) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: 1rem;
+    color: #1e293b;
+  }
+
+  :global(.item-label) {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  :global(.item-value) {
+    color: #334155;
+  }
+
+  :global(.item-meta) {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.15rem;
+    font-weight: 500;
+  }
+
+  :global(.item-description) {
+    margin: 0.35rem 0 0;
+    color: #475569;
+    font-size: 0.925rem;
+    line-height: 1.5;
+  }
+
+  :global(.section-bullets) {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+  }
+
+  :global(.section-bullets li) {
+    margin-bottom: 0.35rem;
+    color: #334155;
+    font-size: 0.925rem;
+  }
+
+  /* Print specific styles */
+  @media print {
+    @page {
+      margin: 0.5in;
+      size: letter;
+    }
+
+    :global(body) {
+      background: #ffffff !important;
+      color: #000000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Hide outer frame and UI elements */
+    :global(.site-header),
+    :global(.site-footer),
+    .toolbar,
+    .status-message {
+      display: none !important;
+    }
+
+    :global(.site-main) {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
+
+    .print-container {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+    }
+
+    .resume-sheet {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    .resume-header h1 {
+      font-size: 24pt !important;
+    }
+
+    :global(.resume-section h2) {
+      font-size: 12pt !important;
+      margin-top: 15pt !important;
+      page-break-after: avoid;
+    }
+
+    :global(.section-item) {
+      page-break-inside: avoid;
+    }
+  }
+</style>

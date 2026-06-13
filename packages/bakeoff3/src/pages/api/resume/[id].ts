@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getAuthFromRequest } from '../../../utils/clerkAuth';
-import { getResumeById, createResume, updateResume, deleteResume } from '../../../utils/resume';
+import { getFullResumeById, createResume, updateResume, deleteResume } from '../../../utils/resume';
 
 export const prerender = false;
 
@@ -15,7 +15,7 @@ export const GET = (async ({ request, params }) => {
     return Response.json({ error: 'Invalid resume ID' }, { status: 400 });
   }
 
-  const resume = await getResumeById(auth.sub, resumeId);
+  const resume = await getFullResumeById(auth.sub, resumeId);
   if (!resume) return Response.json({ error: 'Resume not found' }, { status: 404 });
 
   return Response.json({ resume }, { status: 200 });

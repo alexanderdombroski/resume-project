@@ -32,7 +32,6 @@ export async function getResumesForUser(clerkUserId: string): Promise<ResumeList
   }));
 }
 
-// Get a single resume by ID for a user
 export async function getResumeById(
   clerkUserId: string,
   resumeId: number
@@ -51,6 +50,73 @@ export async function getResumeById(
     summary: row.summary,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+export async function getFullResumeById(
+  clerkUserId: string,
+  resumeId: number
+): Promise<any | null> {
+  const db = createDbClient();
+  const resumeResult = await db.execute(
+    'SELECT id, title, summary, created_at, updated_at FROM resume WHERE clerk_user_id = ? AND id = ?',
+    [clerkUserId, resumeId]
+  );
+  const resumeRows = resumeResult.rows;
+  if (resumeRows.length === 0) return null;
+  const resumeRow = resumeRows[0];
+
+  const sectionsResult = await db.execute(
+    'SELECT id, title, item_order, type FROM section WHERE resume_id = ? ORDER BY item_order ASC, id ASC',
+    [resumeId]
+  );
+
+  const sections = [];
+  for (const secRow of sectionsResult.rows) {
+    const secId = Number(secRow.id);
+
+    const itemsResult = await db.execute(
+      'SELECT id, section_id, label, value, start_date, end_date, location, description, item_order FROM section_item WHERE section_id = ? ORDER BY item_order ASC, id ASC',
+      [secId]
+    );
+
+    const bulletsResult = await db.execute(
+      'SELECT id, section_id, content, item_order FROM bullet_point WHERE section_id = ? ORDER BY item_order ASC, id ASC',
+      [secId]
+    );
+
+    sections.push({
+      id: secId,
+      title: String(secRow.title),
+      item_order: Number(secRow.item_order),
+      type: secRow.type ? String(secRow.type) : null,
+      items: itemsResult.rows.map((row: any) => ({
+        id: Number(row.id),
+        section_id: Number(row.section_id),
+        label: row.label ? String(row.label) : null,
+        value: row.value ? String(row.value) : null,
+        start_date: row.start_date ? String(row.start_date) : null,
+        end_date: row.end_date ? String(row.end_date) : null,
+        location: row.location ? String(row.location) : null,
+        description: row.description ? String(row.description) : null,
+        item_order: Number(row.item_order),
+      })),
+      bullets: bulletsResult.rows.map((row: any) => ({
+        id: Number(row.id),
+        section_id: Number(row.section_id),
+        content: String(row.content),
+        item_order: Number(row.item_order),
+      })),
+    });
+  }
+
+  return {
+    id: Number(resumeRow.id),
+    title: String(resumeRow.title),
+    summary: resumeRow.summary ? String(resumeRow.summary) : null,
+    createdAt: String(resumeRow.created_at),
+    updatedAt: String(resumeRow.updated_at),
+    sections,
   };
 }
 

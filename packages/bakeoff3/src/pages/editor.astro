@@ -13,6 +13,7 @@ import Layout from '../components/layout/Layout.astro';
       </p>
       <div class="actions">
         <a class="button button-primary" href="/dashboard">Back to Dashboard</a>
+        <a class="button button-secondary" id="print-resume-link" href="#">Print Resume</a>
       </div>
     </div>
   </section>
@@ -27,6 +28,9 @@ import Layout from '../components/layout/Layout.astro';
     const titleEl = document.getElementById('editor-title')!;
     titleEl.textContent = `Editing Resume #${id}`;
     document.title = `Edit Resume #${id} - Endless Resume`;
+
+    const printLink = document.getElementById('print-resume-link') as HTMLAnchorElement;
+    printLink.href = `/print?id=${id}&from=editor`;
   }
 </script>
 
@@ -95,5 +99,17 @@ import Layout from '../components/layout/Layout.astro';
     color: #ffffff;
     background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
     box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
+  }
+
+  .button-secondary {
+    color: #0f172a;
+    background: rgb(255 255 255 / 0.8);
+    border: 1px solid rgb(148 163 184 / 0.3);
+    box-shadow: 0 10px 20px rgb(15 23 42 / 0.03);
+  }
+
+  .button-secondary:hover {
+    background: rgb(255 255 255 / 0.95);
+    border-color: rgb(148 163 184 / 0.45);
   }
 </style>
