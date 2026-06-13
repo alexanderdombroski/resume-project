@@ -28,6 +28,24 @@ import Layout from '../components/layout/Layout.astro';
             <div class="panel-actions">
               <button
                 type="button"
+                id="undo-btn"
+                class="panel-btn"
+                title="Undo (Ctrl+Z / Cmd+Z)"
+                disabled
+              >
+                ⟲ Undo
+              </button>
+              <button
+                type="button"
+                id="redo-btn"
+                class="panel-btn"
+                title="Redo (Ctrl+Y / Cmd+Shift+Z)"
+                disabled
+              >
+                ⟳ Redo
+              </button>
+              <button
+                type="button"
                 id="format-btn"
                 class="panel-btn"
                 title="Prettify JSON formatting"
@@ -137,6 +155,8 @@ import Layout from '../components/layout/Layout.astro';
   const syntaxIcon = document.getElementById('syntax-icon')!;
   const syntaxMessage = document.getElementById('syntax-message')!;
 
+  const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
+  const redoBtn = document.getElementById('redo-btn') as HTMLButtonElement;
   const formatBtn = document.getElementById('format-btn') as HTMLButtonElement;
   const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
   const printResumeLink = document.getElementById('print-resume-link') as HTMLAnchorElement;
@@ -148,6 +168,77 @@ import Layout from '../components/layout/Layout.astro';
   let lastSavedJsonStr = '';
   let currentParsedData: any = null;
   let isDirty = false;
+
+  // Undo/Redo History Stack Management
+  let historyStack: string[] = [];
+  let historyIdx = -1;
+  const MAX_HISTORY = 100;
+  let saveHistoryDebounceTimer: any = null;
+
+  function initHistory(initialValue: string) {
+    historyStack = [initialValue];
+    historyIdx = 0;
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    if (undoBtn) undoBtn.disabled = historyIdx <= 0;
+    if (redoBtn) redoBtn.disabled = historyIdx >= historyStack.length - 1;
+  }
+
+  function pushHistoryState(value: string, force = false) {
+    if (historyIdx >= 0 && historyStack[historyIdx] === value) {
+      return;
+    }
+
+    if (force) {
+      if (saveHistoryDebounceTimer) clearTimeout(saveHistoryDebounceTimer);
+      executePush(value);
+    } else {
+      if (saveHistoryDebounceTimer) clearTimeout(saveHistoryDebounceTimer);
+      saveHistoryDebounceTimer = setTimeout(() => {
+        executePush(value);
+      }, 500); // Debounce typing changes
+    }
+  }
+
+  function executePush(value: string) {
+    historyStack = historyStack.slice(0, historyIdx + 1);
+    historyStack.push(value);
+
+    if (historyStack.length > MAX_HISTORY) {
+      historyStack.shift();
+    } else {
+      historyIdx++;
+    }
+    updateHistoryButtons();
+  }
+
+  function undo() {
+    if (historyIdx > 0) {
+      if (saveHistoryDebounceTimer) clearTimeout(saveHistoryDebounceTimer);
+
+      historyIdx--;
+      const value = historyStack[historyIdx];
+      jsonEditor.value = value;
+
+      validateJson();
+      updateHistoryButtons();
+    }
+  }
+
+  function redo() {
+    if (historyIdx < historyStack.length - 1) {
+      if (saveHistoryDebounceTimer) clearTimeout(saveHistoryDebounceTimer);
+
+      historyIdx++;
+      const value = historyStack[historyIdx];
+      jsonEditor.value = value;
+
+      validateJson();
+      updateHistoryButtons();
+    }
+  }
 
   // Set print link URL
   if (resumeId) {
@@ -509,6 +600,7 @@ import Layout from '../components/layout/Layout.astro';
 
       jsonEditor.value = initialJsonStr;
       lastSavedJsonStr = initialJsonStr;
+      initHistory(initialJsonStr);
       currentParsedData = editorFormat;
 
       // Update document title
@@ -532,13 +624,22 @@ import Layout from '../components/layout/Layout.astro';
   }
 
   // Add event listeners
-  jsonEditor.addEventListener('input', validateJson);
+  jsonEditor.addEventListener('input', () => {
+    validateJson();
+    pushHistoryState(jsonEditor.value);
+  });
+
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
 
   formatBtn.addEventListener('click', () => {
     try {
       const parsed = JSON.parse(jsonEditor.value);
-      jsonEditor.value = JSON.stringify(parsed, null, 2);
+      const formatted = JSON.stringify(parsed, null, 2);
+      pushHistoryState(jsonEditor.value, true);
+      jsonEditor.value = formatted;
       validateJson();
+      pushHistoryState(formatted, true);
     } catch {
       alert('Cannot format invalid JSON. Please resolve syntax errors first.');
     }
@@ -546,11 +647,27 @@ import Layout from '../components/layout/Layout.astro';
 
   saveBtn.addEventListener('click', saveResume);
 
-  // Keyboard shortcut Ctrl+S or Cmd+S
+  // Keyboard shortcuts (Save, Undo, Redo)
   window.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    // Save: Cmd+S or Ctrl+S
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       saveResume();
+    }
+
+    // Undo: Cmd+Z or Ctrl+Z
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      undo();
+    }
+
+    // Redo: Cmd+Shift+Z or Ctrl+Y
+    if (
+      ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+      ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y')
+    ) {
+      e.preventDefault();
+      redo();
     }
   });
 
@@ -637,10 +754,16 @@ import Layout from '../components/layout/Layout.astro';
         if (!parsed.sections) {
           parsed.sections = [];
         }
+
+        pushHistoryState(jsonEditor.value, true);
+
         parsed.sections.push(template);
-        jsonEditor.value = JSON.stringify(parsed, null, 2);
+        const newValue = JSON.stringify(parsed, null, 2);
+        jsonEditor.value = newValue;
 
         validateJson();
+        pushHistoryState(newValue, true);
+
         jsonEditor.focus();
         // Scroll editor to end
         jsonEditor.scrollTop = jsonEditor.scrollHeight;
@@ -779,6 +902,15 @@ import Layout from '../components/layout/Layout.astro';
     background: #f8fafc;
     color: #0f172a;
     border-color: #94a3b8;
+  }
+
+  .panel-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #ffffff;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    transform: none !important;
   }
 
   .save-btn-main {
