@@ -1,6 +1,11 @@
 import type { APIRoute } from 'astro';
 import { getAuthFromRequest } from '../../../utils/clerkAuth';
-import { getFullResumeById, updateResume, deleteResume } from '../../../utils/resume';
+import {
+  getFullResumeById,
+  updateResume,
+  updateFullResume,
+  deleteResume,
+} from '../../../utils/resume';
 
 export const prerender = false;
 
@@ -33,8 +38,13 @@ export const PUT = (async ({ request, params }) => {
   }
 
   const data = await request.json();
-  const updated = await updateResume(auth.sub, resumeId, data);
-  return Response.json({ updated }, { status: 200 });
+  if (data.sections !== undefined) {
+    await updateFullResume(auth.sub, resumeId, data);
+    return Response.json({ message: 'Updated' }, { status: 200 });
+  } else {
+    const updated = await updateResume(auth.sub, resumeId, data);
+    return Response.json({ updated }, { status: 200 });
+  }
 }) satisfies APIRoute;
 
 // DELETE a resume

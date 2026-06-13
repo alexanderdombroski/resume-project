@@ -227,3 +227,104 @@ export async function deleteResume(clerkUserId: string, resumeId: number): Promi
   ]);
   return (result as any).changes ?? 0;
 }
+
+// Update a full resume including sections, items, and bullets
+export async function updateFullResume(
+  clerkUserId: string,
+  resumeId: number,
+  data: {
+    title: string;
+    summary: string | null;
+    sections: Array<{
+      title: string;
+      item_order: number;
+      type: string | null;
+      items?: Array<{
+        label: string | null;
+        value: string | null;
+        start_date: string | null;
+        end_date: string | null;
+        location: string | null;
+        description: string | null;
+        item_order: number;
+      }> | null;
+      bullets?: Array<{
+        content: string;
+        item_order: number;
+      }> | null;
+    }>;
+  }
+): Promise<void> {
+  const db = createDbClient();
+
+  // Verify ownership first
+  const resumeResult = await db.execute(
+    'SELECT id FROM resume WHERE clerk_user_id = ? AND id = ?',
+    [clerkUserId, resumeId]
+  );
+  if (resumeResult.rows.length === 0) {
+    throw new Error('Resume not found or unauthorized');
+  }
+
+  // Use a transaction
+  const tx = await db.transaction('write');
+  try {
+    // 1. Update resume details
+    await tx.execute({
+      sql: 'UPDATE resume SET title = ?, summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [data.title, data.summary ?? null, resumeId],
+    });
+
+    // 2. Delete existing sections (cascades to section_item and bullet_point)
+    await tx.execute({
+      sql: 'DELETE FROM section WHERE resume_id = ?',
+      args: [resumeId],
+    });
+
+    // 3. Insert new sections, items, and bullets
+    if (data.sections && Array.isArray(data.sections)) {
+      for (const sec of data.sections) {
+        const secResult = await tx.execute({
+          sql: 'INSERT INTO section (resume_id, title, item_order, type) VALUES (?, ?, ?, ?) RETURNING id',
+          args: [resumeId, sec.title, sec.item_order, sec.type ?? null],
+        });
+
+        if (secResult.rows && secResult.rows.length > 0) {
+          const secId = Number(secResult.rows[0].id);
+
+          if (sec.items && Array.isArray(sec.items)) {
+            for (const item of sec.items) {
+              await tx.execute({
+                sql: 'INSERT INTO section_item (section_id, label, value, start_date, end_date, location, description, item_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                args: [
+                  secId,
+                  item.label ?? null,
+                  item.value ?? null,
+                  item.start_date ?? null,
+                  item.end_date ?? null,
+                  item.location ?? null,
+                  item.description ?? null,
+                  item.item_order,
+                ],
+              });
+            }
+          }
+
+          if (sec.bullets && Array.isArray(sec.bullets)) {
+            for (const bullet of sec.bullets) {
+              await tx.execute({
+                sql: 'INSERT INTO bullet_point (section_id, content, item_order) VALUES (?, ?, ?)',
+                args: [secId, bullet.content, bullet.item_order],
+              });
+            }
+          }
+        }
+      }
+    }
+
+    await tx.commit();
+  } catch (error) {
+    await tx.rollback();
+    throw error;
+  }
+}
