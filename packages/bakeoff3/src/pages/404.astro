@@ -1,0 +1,257 @@
+---
+import Layout from '../components/layout/Layout.astro';
+
+export const prerender = true;
+
+const puns = [
+  { emoji: '🐶', heading: 'Your dog ate your resume.', body: "Classic. We've all been there." },
+  { emoji: '🌀', heading: 'This page got lost in the ATS.', body: 'Black hole confirmed.' },
+  {
+    emoji: '📠',
+    heading: 'We faxed this page to your references.',
+    body: "They haven't called back either.",
+  },
+  {
+    emoji: '☕',
+    heading: 'This page is still "updating its LinkedIn."',
+    body: "It's been six months.",
+  },
+  {
+    emoji: '🎯',
+    heading: "You're overqualified for this URL.",
+    body: "We'll keep your 404 on file.",
+  },
+  {
+    emoji: '📋',
+    heading: 'This page has a five-year gap in its history.',
+    body: 'Calling it "personal growth."',
+  },
+  {
+    emoji: '🤝',
+    heading: 'We appreciate your interest in this page.',
+    body: "We'll reach out if anything opens up.",
+  },
+];
+---
+
+<Layout title="404 — Page Not Found | Endless Resume" subtitle="Page Not Found">
+  <div class="not-found">
+    <div class="card" id="not-found-card">
+      <p class="label">404 Error</p>
+
+      <div class="pun-display" aria-live="polite">
+        <span class="pun-emoji" id="pun-emoji">{puns[0].emoji}</span>
+        <h1 class="pun-heading" id="pun-heading">{puns[0].heading}</h1>
+        <p class="pun-body" id="pun-body">{puns[0].body}</p>
+      </div>
+
+      <div class="actions">
+        <a href="/" class="btn-primary" id="go-home">← Back to Home</a>
+        <button class="btn-ghost" id="next-pun">Another excuse →</button>
+      </div>
+
+      <div class="dots" role="tablist" aria-label="Pun selector">
+        {
+          puns.map((_, i) => (
+            <button
+              class:list={['dot', i === 0 && 'is-active']}
+              data-index={String(i)}
+              role="tab"
+              aria-label={`Show pun ${i + 1}`}
+              id={`dot-${i}`}
+            />
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ puns }}>
+  let current = 0;
+
+  const emojiEl = document.getElementById('pun-emoji');
+  const headingEl = document.getElementById('pun-heading');
+  const bodyEl = document.getElementById('pun-body');
+  const dots = Array.from(document.querySelectorAll('.dot'));
+
+  function showPun(index) {
+    current = ((index % puns.length) + puns.length) % puns.length;
+    const pun = puns[current];
+
+    [emojiEl, headingEl, bodyEl].forEach((el) => el.classList.add('fade-out'));
+
+    setTimeout(() => {
+      emojiEl.textContent = pun.emoji;
+      headingEl.textContent = pun.heading;
+      bodyEl.textContent = pun.body;
+      [emojiEl, headingEl, bodyEl].forEach((el) => el.classList.remove('fade-out'));
+    }, 220);
+
+    dots.forEach((dot, i) => dot.classList.toggle('is-active', i === current));
+  }
+
+  document.getElementById('next-pun').addEventListener('click', () => showPun(current + 1));
+  dots.forEach((dot) => dot.addEventListener('click', () => showPun(Number(dot.dataset.index))));
+
+  // Auto-rotate every 5 s
+  setInterval(() => showPun(current + 1), 5000);
+</script>
+
+<style>
+  .not-found {
+    display: grid;
+    place-items: center;
+    min-height: 60vh;
+    padding: 2rem 0;
+  }
+
+  .card {
+    width: min(600px, 100%);
+    padding: clamp(2rem, 5vw, 3.5rem);
+    border-radius: 2rem;
+    background: rgb(255 255 255 / 0.8);
+    border: 1px solid rgb(148 163 184 / 0.2);
+    box-shadow:
+      0 32px 80px rgb(15 23 42 / 0.1),
+      0 4px 16px rgb(15 23 42 / 0.06);
+    backdrop-filter: blur(16px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+  }
+
+  .label {
+    margin: 0;
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .pun-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 10rem;
+  }
+
+  .pun-emoji {
+    display: block;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    line-height: 1;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  .pun-heading {
+    margin: 0;
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    text-wrap: balance;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  .pun-body {
+    margin: 0;
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.65;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  .pun-emoji.fade-out,
+  .pun-heading.fade-out,
+  .pun-body.fade-out {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1.4rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgb(37 99 235 / 0.28);
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgb(37 99 235 / 0.36);
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1.2rem;
+    border-radius: 999px;
+    background: transparent;
+    color: #475569;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: 1px solid rgb(148 163 184 / 0.3);
+    cursor: pointer;
+    font-family: inherit;
+    transition:
+      background 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .btn-ghost:hover {
+    background: rgb(241 245 249 / 0.9);
+    color: #0f172a;
+    transform: translateY(-1px);
+  }
+
+  .dots {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgb(148 163 184 / 0.4);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background 200ms ease,
+      width 200ms ease;
+  }
+
+  .dot.is-active {
+    background: #1d4ed8;
+    width: 1.4rem;
+  }
+</style>
