@@ -84,6 +84,20 @@ import Layout from '../components/layout/Layout.astro';
           </div>
         </div>
 
+        <!-- Drag & Drop Section Organizer -->
+        <div class="organizer-card" id="organizer-card">
+          <div class="organizer-header">
+            <h3>Visual Section Organizer</h3>
+            <span class="organizer-badge">Drag & Drop to Reorder</span>
+          </div>
+          <p class="organizer-desc">
+            Drag the sections below to instantly rearrange your resume's layout structure.
+          </p>
+          <div class="organizer-list" id="organizer-list">
+            <!-- Dynamic cards -->
+          </div>
+        </div>
+
         <!-- Cheat Sheet / Help card -->
         <div class="help-card">
           <h3>JSON Editor Guidelines</h3>
@@ -148,6 +162,7 @@ import Layout from '../components/layout/Layout.astro';
   const editorError = document.getElementById('editor-error')!;
   const errorMessage = document.getElementById('error-message')!;
   const workspaceGrid = document.getElementById('workspace-grid')!;
+  const organizerList = document.getElementById('organizer-list')!;
 
   const jsonEditor = document.getElementById('json-editor') as HTMLTextAreaElement;
   const saveStatus = document.getElementById('save-status')!;
@@ -237,6 +252,104 @@ import Layout from '../components/layout/Layout.astro';
 
       validateJson();
       updateHistoryButtons();
+    }
+  }
+
+  // Visual Section Organizer Drag & Drop State
+  let lastRenderedSectionsStr = '';
+
+  function renderSectionOrganizer(data: any) {
+    organizerList.innerHTML = '';
+
+    if (!data.sections || !Array.isArray(data.sections) || data.sections.length === 0) {
+      organizerList.innerHTML =
+        '<p style="color: #64748b; font-size: 0.825rem; margin: 0.5rem 0; text-align: center;">No sections found in JSON</p>';
+      return;
+    }
+
+    data.sections.forEach((sec: any, idx: number) => {
+      const card = document.createElement('div');
+      card.className = 'section-drag-card';
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-index', idx.toString());
+
+      card.innerHTML = `
+        <span class="drag-handle" aria-hidden="true">☰</span>
+        <span class="section-card-title">${sec.title || 'Untitled Section'}</span>
+        <span class="section-card-type">${sec.type || 'custom'}</span>
+      `;
+
+      // Drag events
+      card.addEventListener('dragstart', (e: DragEvent) => {
+        card.classList.add('dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', idx.toString());
+        }
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.section-drag-card').forEach((c) => {
+          c.classList.remove('drag-over');
+        });
+      });
+
+      card.addEventListener('dragover', (e: DragEvent) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        card.classList.add('drag-over');
+      });
+
+      card.addEventListener('dragenter', (e: DragEvent) => {
+        e.preventDefault();
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('drag-over');
+      });
+
+      card.addEventListener('drop', (e: DragEvent) => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+
+        const fromIndex = parseInt(e.dataTransfer?.getData('text/plain') || '-1', 10);
+        const toIndex = idx;
+
+        if (fromIndex !== -1 && fromIndex !== toIndex) {
+          reorderSections(fromIndex, toIndex);
+        }
+      });
+
+      organizerList.appendChild(card);
+    });
+  }
+
+  function tryRenderOrganizer(parsedData: any) {
+    const currentSectionsStr = JSON.stringify(parsedData.sections || []);
+    if (currentSectionsStr !== lastRenderedSectionsStr) {
+      renderSectionOrganizer(parsedData);
+      lastRenderedSectionsStr = currentSectionsStr;
+    }
+  }
+
+  function reorderSections(fromIdx: number, toIdx: number) {
+    try {
+      const parsed = JSON.parse(jsonEditor.value);
+      if (!parsed.sections || !Array.isArray(parsed.sections)) return;
+
+      pushHistoryState(jsonEditor.value, true);
+
+      const [movedSection] = parsed.sections.splice(fromIdx, 1);
+      parsed.sections.splice(toIdx, 0, movedSection);
+
+      const newValue = JSON.stringify(parsed, null, 2);
+      jsonEditor.value = newValue;
+
+      validateJson();
+      pushHistoryState(newValue, true);
+    } catch {
+      alert('Cannot reorder sections while there are JSON formatting errors.');
     }
   }
 
@@ -499,12 +612,17 @@ import Layout from '../components/layout/Layout.astro';
         saveStatus.className = 'status-badge saved';
       }
 
+      // Render section organizer
+      tryRenderOrganizer(parsed);
+      if (organizerList) organizerList.classList.remove('invalid');
+
       return true;
     } catch (err: any) {
       syntaxBanner.className = 'syntax-banner invalid';
       syntaxIcon.textContent = '⚠';
       syntaxMessage.textContent = 'Invalid JSON: ' + err.message;
       saveBtn.setAttribute('disabled', 'true');
+      if (organizerList) organizerList.classList.add('invalid');
       return false;
     }
   }
@@ -1263,6 +1381,120 @@ import Layout from '../components/layout/Layout.astro';
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* Section organizer card and items styling */
+  .organizer-card {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 0.08);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .organizer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .organizer-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .organizer-badge {
+    font-size: 0.725rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .organizer-desc {
+    margin: 0;
+    font-size: 0.825rem;
+    color: #475569;
+    line-height: 1.4;
+  }
+
+  :global(.organizer-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    transition: opacity 200ms ease;
+  }
+
+  :global(.organizer-list.invalid) {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  :global(.section-drag-card) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: grab;
+    user-select: none;
+    transition: all 200ms ease;
+  }
+
+  :global(.section-drag-card:active) {
+    cursor: grabbing;
+  }
+
+  :global(.section-drag-card.dragging) {
+    opacity: 0.4;
+    background: #f8fafc;
+    border-style: dashed;
+    border-color: #3b82f6;
+  }
+
+  :global(.section-drag-card.drag-over) {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+    transform: scale(1.015);
+  }
+
+  :global(.drag-handle) {
+    color: #94a3b8;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: bold;
+    cursor: grab;
+  }
+
+  :global(.section-card-title) {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+    flex-grow: 1;
+  }
+
+  :global(.section-card-type) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 
   /* Responsive styling */
