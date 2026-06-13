@@ -19,4 +19,7 @@ export default defineConfig({
   integrations: [clerk(), solidJs()],
   adapter: netlify(),
   output: 'server',
+  devToolbar: {
+    enabled: false,
+  },
 });
