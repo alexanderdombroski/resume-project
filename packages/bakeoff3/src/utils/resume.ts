@@ -60,13 +60,65 @@ export async function createResume(
   data: { title: string; summary?: string | null }
 ): Promise<ResumeListItem> {
   const db = createDbClient();
+
+  // Ensure the user exists in app_user table to satisfy foreign key constraints
+  await db.execute('INSERT OR IGNORE INTO app_user (clerk_user_id) VALUES (?)', [clerkUserId]);
+
   const result = await db.execute(
     'INSERT INTO resume (clerk_user_id, title, summary) VALUES (?, ?, ?) RETURNING id, title, summary, created_at, updated_at',
     [clerkUserId, data.title, data.summary ?? null]
   );
   const row = (result.rows as unknown as ResumeRow[])[0];
+  const resumeId = Number(row.id);
+
+  // Insert default sections
+  const sectionsResult = await db.execute(
+    `INSERT INTO section (resume_id, title, item_order, type) VALUES 
+      (?, 'Experience', 1, 'experience'),
+      (?, 'Education', 2, 'education'),
+      (?, 'Skills', 3, 'skills')
+     RETURNING id, title`,
+    [resumeId, resumeId, resumeId]
+  );
+
+  const sections = sectionsResult.rows as unknown as { id: number; title: string }[];
+  const expSection = sections.find((s) => s.title === 'Experience');
+  const eduSection = sections.find((s) => s.title === 'Education');
+  const skillsSection = sections.find((s) => s.title === 'Skills');
+
+  if (expSection) {
+    await db.execute(
+      `INSERT INTO section_item (section_id, label, value, start_date, location, description, item_order) VALUES
+        (?, 'Software Engineer', 'Example Corp', '2020-01-01', 'Remote', 'Worked on scalable backend systems.', 1)
+       RETURNING id`,
+      [expSection.id]
+    );
+    await db.execute(
+      `INSERT INTO bullet_point (section_id, content, item_order) VALUES
+        (?, 'Developed REST APIs using Node.js and TypeScript.', 1),
+        (?, 'Improved database query performance by 20%.', 2)`,
+      [expSection.id, expSection.id]
+    );
+  }
+
+  if (eduSection) {
+    await db.execute(
+      `INSERT INTO section_item (section_id, label, value, start_date, end_date, location, item_order) VALUES
+        (?, 'B.S. Computer Science', 'State University', '2016-08-01', '2020-05-01', 'City, ST', 1)`,
+      [eduSection.id]
+    );
+  }
+
+  if (skillsSection) {
+    await db.execute(
+      `INSERT INTO bullet_point (section_id, content, item_order) VALUES
+        (?, 'JavaScript, TypeScript, React, Node.js', 1)`,
+      [skillsSection.id]
+    );
+  }
+
   return {
-    id: Number(row.id),
+    id: resumeId,
     title: String(row.title),
     summary: row.summary,
     createdAt: row.created_at,

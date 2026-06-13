@@ -5,12 +5,17 @@ import Layout from '../components/layout/Layout.astro';
 <Layout title="Dashboard - Endless Resume" subtitle="Workspace">
   <section class="dashboard">
     <section class="dashboard-card" aria-labelledby="dashboard-title">
-      <p class="section-label">Your Workspace</p>
-      <h1 id="dashboard-title">Your resumes</h1>
-      <p>
-        Welcome back. Here you can manage, update, and tailor your resumes to fit specific job
-        descriptions.
-      </p>
+      <div class="dashboard-header">
+        <div class="dashboard-title-group">
+          <p class="section-label">Your Workspace</p>
+          <h1 id="dashboard-title">Your resumes</h1>
+          <p>
+            Welcome back. Here you can manage, update, and tailor your resumes to fit specific job
+            descriptions.
+          </p>
+        </div>
+        <button id="create-resume-btn" class="button button-primary"> New Resume </button>
+      </div>
 
       <div id="resume-container" aria-live="polite">
         <div class="loading-state" id="resume-loading">
@@ -48,7 +53,7 @@ import Layout from '../components/layout/Layout.astro';
       first tailored resume.
     </p>
     <div class="actions">
-      <a class="button button-primary" href="/">Create a resume</a>
+      <button class="button button-primary empty-create-btn">Create a resume</button>
     </div>
   </div>
 </template>
@@ -56,6 +61,60 @@ import Layout from '../components/layout/Layout.astro';
 <script>
   const container = document.getElementById('resume-container')!;
   const loading = document.getElementById('resume-loading')!;
+  const createBtn = document.getElementById('create-resume-btn')!;
+
+  function createResumeElement(resume: {
+    id: number;
+    title: string;
+    summary: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }) {
+    const itemTpl = document.getElementById('resume-item-tpl') as HTMLTemplateElement;
+    const item = itemTpl.content.cloneNode(true) as DocumentFragment;
+    item.querySelector('.resume-kicker')!.textContent = `Resume #${resume.id}`;
+    item.querySelector('h2')!.textContent = resume.title;
+    item.querySelector('.resume-summary')!.textContent = resume.summary ?? 'No summary added yet.';
+    item.querySelector('.resume-created')!.textContent =
+      `Created ${new Date(resume.createdAt).toLocaleDateString()}`;
+    item.querySelector('.resume-updated')!.textContent =
+      `Updated ${new Date(resume.updatedAt).toLocaleDateString()}`;
+
+    const li = item.querySelector('li')!;
+    li.addEventListener('click', () => {
+      window.location.href = `/editor?id=${resume.id}`;
+    });
+    li.style.cursor = 'pointer';
+
+    return item;
+  }
+
+  function addResumeToList(
+    resume: {
+      id: number;
+      title: string;
+      summary: string | null;
+      createdAt: string;
+      updatedAt: string;
+    },
+    prepend = false
+  ) {
+    let ul = container.querySelector('ul.resume-list');
+
+    if (!ul) {
+      container.innerHTML = '';
+      const listTpl = document.getElementById('resume-list-tpl') as HTMLTemplateElement;
+      container.appendChild(listTpl.content.cloneNode(true));
+      ul = container.querySelector('ul.resume-list')!;
+    }
+
+    const item = createResumeElement(resume);
+    if (prepend && ul.firstChild) {
+      ul.insertBefore(item, ul.firstChild);
+    } else {
+      ul.appendChild(item);
+    }
+  }
 
   async function loadResumes() {
     let data: {
@@ -82,12 +141,14 @@ import Layout from '../components/layout/Layout.astro';
 
       data = await res.json();
     } catch {
-      loading.innerHTML =
-        '<p class="error-msg">Failed to load resumes. Please refresh the page.</p>';
+      if (loading) {
+        loading.innerHTML =
+          '<p class="error-msg">Failed to load resumes. Please refresh the page.</p>';
+      }
       return;
     }
 
-    loading.remove();
+    if (loading) loading.remove();
 
     if (data.resumes.length === 0) {
       const emptyTpl = document.getElementById('empty-state-tpl') as HTMLTemplateElement;
@@ -95,33 +156,53 @@ import Layout from '../components/layout/Layout.astro';
       return;
     }
 
-    const listTpl = document.getElementById('resume-list-tpl') as HTMLTemplateElement;
-    const itemTpl = document.getElementById('resume-item-tpl') as HTMLTemplateElement;
-    const list = listTpl.content.cloneNode(true) as DocumentFragment;
-    const ul = list.querySelector('ul')!;
-
     for (const resume of data.resumes) {
-      const item = itemTpl.content.cloneNode(true) as DocumentFragment;
-      item.querySelector('.resume-kicker')!.textContent = `Resume #${resume.id}`;
-      item.querySelector('h2')!.textContent = resume.title;
-      item.querySelector('.resume-summary')!.textContent =
-        resume.summary ?? 'No summary added yet.';
-      item.querySelector('.resume-created')!.textContent =
-        `Created ${new Date(resume.createdAt).toLocaleDateString()}`;
-      item.querySelector('.resume-updated')!.textContent =
-        `Updated ${new Date(resume.updatedAt).toLocaleDateString()}`;
-
-      const li = item.querySelector('li')!;
-      li.addEventListener('click', () => {
-        window.location.href = `/editor?id=${resume.id}`;
-      });
-      li.style.cursor = 'pointer';
-
-      ul.appendChild(item);
+      addResumeToList(resume);
     }
-
-    container.appendChild(list);
   }
+
+  createBtn.addEventListener('click', async () => {
+    try {
+      createBtn.setAttribute('disabled', 'true');
+      const originalText = createBtn.textContent;
+      createBtn.textContent = 'Creating...';
+
+      const res = await fetch('/api/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Software Engineer Resume',
+          summary:
+            'A passionate software engineer with experience building full-stack applications.',
+        }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = '/?auth=sign-in';
+        return;
+      }
+
+      if (!res.ok) throw new Error('Failed to create resume');
+      const data = await res.json();
+
+      addResumeToList(data.resume, true);
+      createBtn.textContent = originalText;
+    } catch (error) {
+      console.error(error);
+      alert('Failed to create resume');
+      createBtn.textContent = 'New Resume';
+    } finally {
+      createBtn.removeAttribute('disabled');
+    }
+  });
+
+  container.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.matches('.empty-create-btn')) {
+      e.preventDefault();
+      createBtn.click();
+    }
+  });
 
   loadResumes();
 </script>
@@ -138,10 +219,21 @@ import Layout from '../components/layout/Layout.astro';
     width: min(50rem, 100%);
     padding: clamp(1.35rem, 3vw, 2rem);
     border-radius: 1.5rem;
-    background: rgb(255 255 255 / 0.72);
+    background: #ffffff;
     border: 1px solid rgb(148 163 184 / 0.18);
     box-shadow: 0 24px 70px rgb(15 23 42 / 0.08);
-    backdrop-filter: blur(14px);
+  }
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .dashboard-title-group {
+    flex: 1;
   }
 
   .section-label {
@@ -161,7 +253,7 @@ import Layout from '../components/layout/Layout.astro';
     letter-spacing: -0.06em;
   }
 
-  .dashboard-card > p {
+  .dashboard-title-group p:not(.section-label) {
     margin: 1rem 0 0;
     max-width: 46rem;
     color: #475569;
@@ -216,7 +308,7 @@ import Layout from '../components/layout/Layout.astro';
     gap: 1rem;
     padding: 1.15rem 1.15rem 1.05rem;
     border-radius: 1.15rem;
-    background: rgb(255 255 255 / 0.78);
+    background: #ffffff;
     border: 1px solid rgb(148 163 184 / 0.16);
     box-shadow: 0 14px 30px rgb(15 23 42 / 0.05);
     transition:
@@ -266,7 +358,7 @@ import Layout from '../components/layout/Layout.astro';
     margin-top: 1.75rem;
     padding: 1.25rem;
     border-radius: 1.15rem;
-    background: rgb(255 255 255 / 0.68);
+    background: #ffffff;
     border: 1px solid rgb(148 163 184 / 0.16);
   }
 
