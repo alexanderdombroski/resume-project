@@ -14,11 +14,11 @@ const resumes = await getResumesForUser(userId);
 <Layout title="Dashboard - Endless Resume" subtitle="Workspace">
   <section class="dashboard">
     <section class="dashboard-card" aria-labelledby="dashboard-title">
-      <p class="section-label">Protected workspace</p>
+      <p class="section-label">Your Workspace</p>
       <h1 id="dashboard-title">Your resumes</h1>
       <p>
-        These are the resumes attached to the signed-in Clerk user. Use the modal in the nav to sign
-        in or register, then come back here to manage your work.
+        Welcome back. Here you can manage, update, and tailor your resumes to fit specific job
+        descriptions.
       </p>
 
       {
@@ -41,14 +41,14 @@ const resumes = await getResumesForUser(userId);
           </ul>
         ) : (
           <div class="empty-state">
-            <h2>No resumes yet</h2>
+            <h2>No resumes found</h2>
             <p>
-              Create the first resume record for this user and it will appear here. The dashboard is
-              already wired to the data source, so the next step is a create/edit flow.
+              You haven't created any resumes yet. Return to the homepage to get started and build
+              your first tailored resume.
             </p>
             <div class="actions">
               <a class="button button-primary" href="/">
-                Back home
+                Create a resume
               </a>
             </div>
           </div>
