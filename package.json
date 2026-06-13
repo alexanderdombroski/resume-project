@@ -36,12 +36,13 @@
     "browser-tabs-lock@1.3.0": true,
     "utf-8-validate@6.0.6": true,
     "unrs-resolver@1.12.2": true,
-    "workerd@1.20260526.1": true,
     "fsevents@2.3.3": true,
     "sharp@0.34.5": true,
     "unix-dgram@2.0.7": true,
     "bufferutil@4.1.0": true,
     "core-js@3.47.0": true,
-    "netlify-cli@26.1.0": true
+    "netlify-cli@26.1.0": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260611.1": true
   }
 }
