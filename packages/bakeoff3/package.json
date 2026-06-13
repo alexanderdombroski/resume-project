@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint src",
-    "init-db": "node --experimental-strip-types scripts/init-db.ts"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@astrojs/netlify": "^7.0.12",
