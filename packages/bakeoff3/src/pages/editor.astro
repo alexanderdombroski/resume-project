@@ -52,8 +52,9 @@ import Layout from '../components/layout/Layout.astro';
               >
                 Format
               </button>
-              <button type="button" id="save-btn" class="button button-primary save-btn-main">
-                Save Changes
+              <button type="button" id="save-btn" class="save-btn" title="Save (Ctrl+S / Cmd+S)">
+                <span class="save-btn-icon" aria-hidden="true">↑</span>
+                <span class="save-btn-label">Save</span>
               </button>
             </div>
           </div>
@@ -634,11 +635,15 @@ import Layout from '../components/layout/Layout.astro';
       return;
     }
 
+    const saveBtnLabel = saveBtn.querySelector('.save-btn-label')!;
+    const saveBtnIcon = saveBtn.querySelector('.save-btn-icon')!;
+
     saveStatus.textContent = 'Saving changes...';
     saveStatus.className = 'status-badge saving';
     saveBtn.setAttribute('disabled', 'true');
-    const originalText = saveBtn.textContent;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.classList.add('is-saving');
+    saveBtnIcon.textContent = '↻';
+    saveBtnLabel.textContent = 'Saving';
 
     try {
       const apiPayload = toApiFormat(currentParsedData);
@@ -666,23 +671,35 @@ import Layout from '../components/layout/Layout.astro';
       saveStatus.textContent = 'All changes saved';
       saveStatus.className = 'status-badge saved';
 
-      // Update titles
       if (currentParsedData.title) {
         document.title = `Edit: ${currentParsedData.title} - Endless Resume`;
       }
 
-      // Save animation feedback
-      saveBtn.textContent = 'Saved!';
+      // Briefly show saved confirmation, then reset quietly
+      saveBtn.classList.remove('is-saving');
+      saveBtn.classList.add('is-saved');
+      saveBtnIcon.textContent = '✓';
+      saveBtnLabel.textContent = 'Saved';
+
       setTimeout(() => {
-        saveBtn.textContent = originalText;
+        saveBtn.classList.remove('is-saved');
         saveBtn.removeAttribute('disabled');
-      }, 1500);
+        saveBtnLabel.textContent = 'Save';
+      }, 1800);
     } catch (err: any) {
       console.error(err);
       saveStatus.textContent = 'Save failed';
       saveStatus.className = 'status-badge error';
-      saveBtn.textContent = 'Try Again';
+      saveBtn.classList.remove('is-saving');
+      saveBtn.classList.add('is-error');
+      saveBtnIcon.textContent = '!';
+      saveBtnLabel.textContent = 'Error';
       saveBtn.removeAttribute('disabled');
+      setTimeout(() => {
+        saveBtn.classList.remove('is-error');
+        saveBtnIcon.textContent = '↑';
+        saveBtnLabel.textContent = 'Save';
+      }, 3000);
       alert(`Error saving resume: ${err.message}`);
     }
   }
@@ -1031,10 +1048,73 @@ import Layout from '../components/layout/Layout.astro';
     transform: none !important;
   }
 
-  .save-btn-main {
+  .save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 2.25rem;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    font-weight: 700;
     font-size: 0.85rem;
-    padding: 0 1.25rem;
+    cursor: pointer;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    transition:
+      background 200ms ease,
+      color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      transform 150ms ease;
+  }
+
+  .save-btn:hover:not(:disabled) {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+  }
+
+  .save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  :global(.save-btn.is-saving) {
+    background: #eff6ff;
+    color: #3b82f6;
+    border-color: #bfdbfe;
+    pointer-events: none;
+  }
+
+  :global(.save-btn.is-saved) {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
+  }
+
+  :global(.save-btn.is-error) {
+    background: #fff5f5;
+    color: #e11d48;
+    border-color: #fecdd3;
+  }
+
+  .save-btn-icon {
+    font-size: 1rem;
+    line-height: 1;
+    transition: transform 200ms ease;
+  }
+
+  :global(.save-btn.is-saving .save-btn-icon) {
+    animation: save-spin 0.8s linear infinite;
+  }
+
+  @keyframes save-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .syntax-banner {
@@ -1340,18 +1420,6 @@ import Layout from '../components/layout/Layout.astro';
     margin-bottom: 0.25rem;
     color: #334155;
     font-size: 0.875rem;
-  }
-
-  .button-primary {
-    color: #ffffff;
-    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
-    border: none;
-  }
-
-  .button-primary:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 24px rgba(37, 99, 235, 0.22);
   }
 
   .button-secondary {
