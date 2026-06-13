@@ -70,7 +70,7 @@ export function splitSqlStatements(input: string) {
 }
 
 // eslint-disable-next-line no-unused-vars -- TypeScript requires parameter names in function types.
-type BatchWriter = (statements: Array<{ sql: string }>) => Promise<unknown>;
+type BatchWriter = (statements: Array<{ sql: string }>, mode?: string) => Promise<unknown>;
 
 export async function runSqlBatch(db: { batch: BatchWriter }, sql: string) {
   const statements = splitSqlStatements(sql);
