@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getAuthFromRequest } from '../../../utils/clerkAuth';
-import { getResumeById, createResume, updateResume, deleteResume } from '../../../utils/resume';
+import { getResumeById, updateResume, deleteResume } from '../../../utils/resume';
 
 export const prerender = false;
 
@@ -19,16 +19,6 @@ export const GET = (async ({ request, params }) => {
   if (!resume) return Response.json({ error: 'Resume not found' }, { status: 404 });
 
   return Response.json({ resume }, { status: 200 });
-}) satisfies APIRoute;
-
-// POST a new resume
-export const POST = (async ({ request }) => {
-  const auth = await getAuthFromRequest(request);
-  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const data = await request.json();
-  const created = await createResume(auth.sub, data);
-  return Response.json({ resume: created }, { status: 201 });
 }) satisfies APIRoute;
 
 // PUT update an existing resume
