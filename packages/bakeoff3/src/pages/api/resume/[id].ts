@@ -1,14 +1,13 @@
 import type { APIRoute } from 'astro';
+import { getAuthFromRequest } from '../../../utils/clerkAuth';
 import { getResumeById, createResume, updateResume, deleteResume } from '../../../utils/resume';
 
 export const prerender = false;
 
 // GET a single resume by ID
-export const GET = (async ({ locals, params }) => {
-  const { isAuthenticated, userId } = locals.auth();
-  if (!isAuthenticated || !userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const GET = (async ({ request, params }) => {
+  const auth = await getAuthFromRequest(request);
+  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = params;
   const resumeId = Number(id);
@@ -16,32 +15,26 @@ export const GET = (async ({ locals, params }) => {
     return Response.json({ error: 'Invalid resume ID' }, { status: 400 });
   }
 
-  const resume = await getResumeById(userId, resumeId);
-  if (!resume) {
-    return Response.json({ error: 'Resume not found' }, { status: 404 });
-  }
+  const resume = await getResumeById(auth.sub, resumeId);
+  if (!resume) return Response.json({ error: 'Resume not found' }, { status: 404 });
 
   return Response.json({ resume }, { status: 200 });
 }) satisfies APIRoute;
 
-// POST a new resume with the given ID
-export const POST = (async ({ locals, request }) => {
-  const { isAuthenticated, userId } = locals.auth();
-  if (!isAuthenticated || !userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+// POST a new resume
+export const POST = (async ({ request }) => {
+  const auth = await getAuthFromRequest(request);
+  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const data = await request.json();
-  const created = await createResume(userId, data);
+  const created = await createResume(auth.sub, data);
   return Response.json({ resume: created }, { status: 201 });
 }) satisfies APIRoute;
 
 // PUT update an existing resume
-export const PUT = (async ({ locals, request, params }) => {
-  const { isAuthenticated, userId } = locals.auth();
-  if (!isAuthenticated || !userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const PUT = (async ({ request, params }) => {
+  const auth = await getAuthFromRequest(request);
+  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = params;
   const resumeId = Number(id);
@@ -50,16 +43,14 @@ export const PUT = (async ({ locals, request, params }) => {
   }
 
   const data = await request.json();
-  const updated = await updateResume(userId, resumeId, data);
+  const updated = await updateResume(auth.sub, resumeId, data);
   return Response.json({ updated }, { status: 200 });
 }) satisfies APIRoute;
 
 // DELETE a resume
-export const DELETE = (async ({ locals, params }) => {
-  const { isAuthenticated, userId } = locals.auth();
-  if (!isAuthenticated || !userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const DELETE = (async ({ request, params }) => {
+  const auth = await getAuthFromRequest(request);
+  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = params;
   const resumeId = Number(id);
@@ -67,6 +58,6 @@ export const DELETE = (async ({ locals, params }) => {
     return Response.json({ error: 'Invalid resume ID' }, { status: 400 });
   }
 
-  await deleteResume(userId, resumeId);
+  await deleteResume(auth.sub, resumeId);
   return Response.json({ message: 'Deleted' }, { status: 200 });
 }) satisfies APIRoute;

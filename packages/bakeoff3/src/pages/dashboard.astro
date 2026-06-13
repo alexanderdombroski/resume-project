@@ -1,14 +1,5 @@
 ---
 import Layout from '../components/layout/Layout.astro';
-import { getResumesForUser } from '../utils/resume';
-
-const { isAuthenticated, userId } = Astro.locals.auth();
-
-if (!isAuthenticated || !userId) {
-  return Response.redirect(new URL('/?auth=sign-in', Astro.url), 302);
-}
-
-const resumes = await getResumesForUser(userId);
 ---
 
 <Layout title="Dashboard - Endless Resume" subtitle="Workspace">
@@ -21,42 +12,119 @@ const resumes = await getResumesForUser(userId);
         descriptions.
       </p>
 
-      {
-        resumes.length > 0 ? (
-          <ul class="resume-list" aria-label="Your resumes">
-            {resumes.map((resume) => (
-              <li class="resume-item">
-                <div class="resume-copy">
-                  <p class="resume-kicker">Resume #{resume.id}</p>
-                  <h2>{resume.title}</h2>
-                  <p>{resume.summary ?? 'No summary added yet.'}</p>
-                </div>
-
-                <div class="resume-meta">
-                  <span>Created {new Date(resume.createdAt).toLocaleDateString()}</span>
-                  <span>Updated {new Date(resume.updatedAt).toLocaleDateString()}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div class="empty-state">
-            <h2>No resumes found</h2>
-            <p>
-              You haven't created any resumes yet. Return to the homepage to get started and build
-              your first tailored resume.
-            </p>
-            <div class="actions">
-              <a class="button button-primary" href="/">
-                Create a resume
-              </a>
-            </div>
-          </div>
-        )
-      }
+      <div id="resume-container" aria-live="polite">
+        <div class="loading-state" id="resume-loading">
+          <span class="spinner" aria-hidden="true"></span>
+          <p>Loading your resumes&hellip;</p>
+        </div>
+      </div>
     </section>
   </section>
 </Layout>
+
+<template id="resume-list-tpl">
+  <ul class="resume-list" aria-label="Your resumes"></ul>
+</template>
+
+<template id="resume-item-tpl">
+  <li class="resume-item">
+    <div class="resume-copy">
+      <p class="resume-kicker"></p>
+      <h2></h2>
+      <p class="resume-summary"></p>
+    </div>
+    <div class="resume-meta">
+      <span class="resume-created"></span>
+      <span class="resume-updated"></span>
+    </div>
+  </li>
+</template>
+
+<template id="empty-state-tpl">
+  <div class="empty-state">
+    <h2>No resumes found</h2>
+    <p>
+      You haven't created any resumes yet. Return to the homepage to get started and build your
+      first tailored resume.
+    </p>
+    <div class="actions">
+      <a class="button button-primary" href="/">Create a resume</a>
+    </div>
+  </div>
+</template>
+
+<script>
+  const container = document.getElementById('resume-container')!;
+  const loading = document.getElementById('resume-loading')!;
+
+  async function loadResumes() {
+    let data: {
+      resumes: Array<{
+        id: number;
+        title: string;
+        summary: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    };
+
+    try {
+      const res = await fetch('/api/resume');
+
+      if (res.status === 401) {
+        window.location.href = '/?auth=sign-in';
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Unexpected response: ${res.status}`);
+      }
+
+      data = await res.json();
+    } catch {
+      loading.innerHTML =
+        '<p class="error-msg">Failed to load resumes. Please refresh the page.</p>';
+      return;
+    }
+
+    loading.remove();
+
+    if (data.resumes.length === 0) {
+      const emptyTpl = document.getElementById('empty-state-tpl') as HTMLTemplateElement;
+      container.appendChild(emptyTpl.content.cloneNode(true));
+      return;
+    }
+
+    const listTpl = document.getElementById('resume-list-tpl') as HTMLTemplateElement;
+    const itemTpl = document.getElementById('resume-item-tpl') as HTMLTemplateElement;
+    const list = listTpl.content.cloneNode(true) as DocumentFragment;
+    const ul = list.querySelector('ul')!;
+
+    for (const resume of data.resumes) {
+      const item = itemTpl.content.cloneNode(true) as DocumentFragment;
+      item.querySelector('.resume-kicker')!.textContent = `Resume #${resume.id}`;
+      item.querySelector('h2')!.textContent = resume.title;
+      item.querySelector('.resume-summary')!.textContent =
+        resume.summary ?? 'No summary added yet.';
+      item.querySelector('.resume-created')!.textContent =
+        `Created ${new Date(resume.createdAt).toLocaleDateString()}`;
+      item.querySelector('.resume-updated')!.textContent =
+        `Updated ${new Date(resume.updatedAt).toLocaleDateString()}`;
+
+      const li = item.querySelector('li')!;
+      li.addEventListener('click', () => {
+        window.location.href = `/editor?id=${resume.id}`;
+      });
+      li.style.cursor = 'pointer';
+
+      ul.appendChild(item);
+    }
+
+    container.appendChild(list);
+  }
+
+  loadResumes();
+</script>
 
 <style>
   .dashboard {
@@ -93,7 +161,7 @@ const resumes = await getResumesForUser(userId);
     letter-spacing: -0.06em;
   }
 
-  .dashboard-card p {
+  .dashboard-card > p {
     margin: 1rem 0 0;
     max-width: 46rem;
     color: #475569;
@@ -101,6 +169,40 @@ const resumes = await getResumesForUser(userId);
     line-height: 1.7;
   }
 
+  /* Loading */
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid rgb(37 99 235 / 0.2);
+    border-top-color: #1d4ed8;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  :global(.error-msg) {
+    margin: 1.75rem 0 0;
+    color: #dc2626;
+    font-size: 0.95rem;
+  }
+
+  /* Resume list */
   .resume-list {
     list-style: none;
     margin: 1.75rem 0 0;
@@ -117,6 +219,14 @@ const resumes = await getResumesForUser(userId);
     background: rgb(255 255 255 / 0.78);
     border: 1px solid rgb(148 163 184 / 0.16);
     box-shadow: 0 14px 30px rgb(15 23 42 / 0.05);
+    transition:
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  .resume-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgb(15 23 42 / 0.09);
   }
 
   .resume-copy h2 {
@@ -136,8 +246,11 @@ const resumes = await getResumesForUser(userId);
     text-transform: uppercase;
   }
 
-  .resume-copy p:last-child {
+  .resume-summary {
     margin: 0.75rem 0 0;
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
   }
 
   .resume-meta {
@@ -148,6 +261,7 @@ const resumes = await getResumesForUser(userId);
     font-size: 0.9rem;
   }
 
+  /* Empty state */
   .empty-state {
     margin-top: 1.75rem;
     padding: 1.25rem;
@@ -164,6 +278,9 @@ const resumes = await getResumesForUser(userId);
 
   .empty-state p {
     margin-top: 0.65rem;
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
   }
 
   .actions {

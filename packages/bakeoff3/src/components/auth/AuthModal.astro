@@ -1,26 +1,27 @@
 ---
-import { Show, SignIn, UserButton } from '@clerk/astro/components';
+// All auth is handled client-side via @clerk/clerk-js — no server-side imports needed.
 ---
 
-<div class="auth-slot">
-  <Show when="signed-out">
+<div class="auth-slot" id="auth-slot">
+  <!-- Signed-out: trigger button + dialog -->
+  <div id="auth-signed-out" hidden>
     <button
       class="nav-link auth-trigger"
       type="button"
       aria-haspopup="dialog"
       aria-controls="auth-dialog"
-      data-auth-open
+      id="auth-open-btn"
     >
       Sign in / Register
     </button>
 
-    <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title" data-auth-dialog>
+    <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
       <div class="auth-dialog-shell">
         <button
           class="auth-close"
           type="button"
           aria-label="Close authentication modal"
-          data-auth-close
+          id="auth-close-btn"
         >
           x
         </button>
@@ -34,71 +35,136 @@ import { Show, SignIn, UserButton } from '@clerk/astro/components';
           </p>
         </div>
 
-        <div class="auth-form">
-          <SignIn
-            withSignUp={true}
-            fallbackRedirectUrl="/dashboard"
-            signUpFallbackRedirectUrl="/dashboard"
-          />
-        </div>
+        <!-- Clerk mounts SignIn here -->
+        <div class="auth-form" id="clerk-sign-in"></div>
       </div>
     </dialog>
-  </Show>
+  </div>
 
-  <Show when="signed-in">
-    <div class="auth-user">
-      <UserButton showName />
-    </div>
-  </Show>
+  <!-- Signed-in: UserButton -->
+  <div class="auth-user" id="auth-signed-in" hidden>
+    <!-- Clerk mounts UserButton here -->
+    <div id="clerk-user-button"></div>
+  </div>
 </div>
 
-<script is:inline>
-  const dialog = document.querySelector('[data-auth-dialog]');
-  const openButton = document.querySelector('[data-auth-open]');
-  const closeButton = document.querySelector('[data-auth-close]');
+<script>
+  import { Clerk } from '@clerk/clerk-js';
+
+  const publishableKey = import.meta.env.PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
+    throw new Error('Add PUBLIC_CLERK_PUBLISHABLE_KEY to your .env file');
+  }
+
+  // Derive the Frontend API domain from the publishable key
+  const clerkDomain = atob(publishableKey.split('_')[2]).slice(0, -1);
+
+  // Load the Clerk UI bundle from Clerk's own CDN (separate from the core JS)
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `https://${clerkDomain}/npm/@clerk/ui@1/dist/ui.browser.js`;
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load @clerk/ui bundle'));
+    document.head.appendChild(script);
+  });
+
+  const clerk = new Clerk(publishableKey);
+  await clerk.load({
+    ui: { ClerkUI: (window as any).__internal_ClerkUICtor },
+  });
+
+  // ---------- DOM refs ----------
+
+  const signedOutEl = document.getElementById('auth-signed-out')!;
+  const signedInEl = document.getElementById('auth-signed-in')!;
+  const dialog = document.getElementById('auth-dialog') as HTMLDialogElement;
+  const openBtn = document.getElementById('auth-open-btn') as HTMLButtonElement;
+  const closeBtn = document.getElementById('auth-close-btn') as HTMLButtonElement;
+  const signInMount = document.getElementById('clerk-sign-in')!;
+  const ubMount = document.getElementById('clerk-user-button')!;
+
   const shouldOpenAuth = new URLSearchParams(window.location.search).get('auth') === 'sign-in';
 
-  const openDialog = () => {
-    if (dialog instanceof HTMLDialogElement && !dialog.open) {
-      dialog.showModal();
-    }
-  };
+  let signInMounted = false;
+  let ubMounted = false;
 
-  const clearAuthParam = () => {
-    if (!shouldOpenAuth) {
-      return;
-    }
+  // ---------- Helpers ----------
 
+  function clearAuthParam() {
     const url = new URL(window.location.href);
+    if (!url.searchParams.has('auth')) return;
     url.searchParams.delete('auth');
-    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
-  };
-
-  if (dialog instanceof HTMLDialogElement && openButton instanceof HTMLButtonElement) {
-    openButton.addEventListener('click', () => {
-      openDialog();
-    });
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
   }
 
-  if (dialog instanceof HTMLDialogElement && closeButton instanceof HTMLButtonElement) {
-    closeButton.addEventListener('click', () => {
-      dialog.close();
-      clearAuthParam();
-    });
+  function openDialog() {
+    if (!dialog.open) dialog.showModal();
   }
 
-  if (dialog instanceof HTMLDialogElement) {
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) {
-        dialog.close();
+  function mountSignIn() {
+    if (signInMounted) return;
+    clerk.mountSignIn(signInMount, {
+      fallbackRedirectUrl: '/dashboard',
+      signUpFallbackRedirectUrl: '/dashboard',
+    });
+    signInMounted = true;
+  }
+
+  // ---------- Auth state ----------
+
+  function applyAuthState() {
+    if (clerk.user) {
+      signedOutEl.hidden = true;
+      signedInEl.hidden = false;
+
+      if (dialog.open) dialog.close();
+
+      if (!ubMounted) {
+        clerk.mountUserButton(ubMount, { showName: true });
+        ubMounted = true;
       }
-    });
+      if (signInMounted) {
+        clerk.unmountSignIn(signInMount);
+        signInMounted = false;
+      }
+    } else {
+      signedOutEl.hidden = false;
+      signedInEl.hidden = true;
 
-    dialog.addEventListener('close', clearAuthParam);
+      if (ubMounted) {
+        clerk.unmountUserButton(ubMount);
+        ubMounted = false;
+      }
+    }
   }
 
-  if (shouldOpenAuth) {
+  // ---------- Event wiring ----------
+
+  openBtn.addEventListener('click', () => {
     openDialog();
+    mountSignIn();
+  });
+
+  closeBtn.addEventListener('click', () => {
+    dialog.close();
+    clearAuthParam();
+  });
+
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+
+  dialog.addEventListener('close', clearAuthParam);
+
+  clerk.addListener(applyAuthState);
+  applyAuthState();
+
+  if (shouldOpenAuth && !clerk.user) {
+    openDialog();
+    mountSignIn();
   }
 </script>
 
@@ -107,6 +173,16 @@ import { Show, SignIn, UserButton } from '@clerk/astro/components';
     margin-left: auto;
     display: flex;
     align-items: center;
+  }
+
+  #auth-signed-out,
+  #auth-signed-in {
+    display: contents;
+  }
+
+  #auth-signed-out[hidden],
+  #auth-signed-in[hidden] {
+    display: none;
   }
 
   .auth-trigger {
@@ -189,10 +265,6 @@ import { Show, SignIn, UserButton } from '@clerk/astro/components';
     margin: 0.85rem 0 0;
     color: #475569;
     line-height: 1.65;
-  }
-
-  .auth-form :global(form) {
-    width: 100%;
   }
 
   @media (max-width: 680px) {

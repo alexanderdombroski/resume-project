@@ -16,7 +16,9 @@
   "dependencies": {
     "@astrojs/netlify": "^7.0.12",
     "@clerk/astro": "^3.3.3",
+    "@clerk/clerk-js": "^6.16.1",
     "@tursodatabase/serverless": "^1.2.0",
+    "jose": "^6.2.3",
     "solid-js": "^1.9.13"
   },
   "devDependencies": {
